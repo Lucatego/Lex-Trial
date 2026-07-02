@@ -133,7 +133,10 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     if ((!isTtsEnabled && !force) || !('speechSynthesis' in window)) return;
     
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Clean up bracket tags like [ACTOR]: for a more natural spoken narration
+    const cleanText = text.replace(/\[([^\]]+)\]:/g, '$1:');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     
     const voices = window.speechSynthesis.getVoices();
     const spanishVoice = voices.find(v => v.lang.startsWith('es-') || v.lang.startsWith('es'));
@@ -767,48 +770,68 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
             {/* Conversation Area */}
             <div className="p-6 flex-1 overflow-y-auto space-y-5 max-h-[400px] min-h-[300px]">
               {conversationHistory.map((msg, index) => {
-                const isUser = msg.sender === 'user';
-                const isWitness = msg.sender === 'witness';
-                const isJudge = msg.sender === 'judge';
-                const isSys = msg.sender === 'system';
+                const subMessages = parseMessageText(msg.text, msg.sender);
 
                 return (
-                  <div key={index} className="space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] md:max-w-md rounded-2xl px-4 py-3 text-xs leading-relaxed font-medium ${
-                        isUser 
-                          ? 'bg-blue-600 text-white rounded-br-none font-semibold'
-                          : isWitness
-                          ? 'bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200/60'
-                          : isJudge
-                          ? 'bg-amber-50 text-amber-900 rounded-bl-none border border-amber-200'
-                          : 'bg-indigo-50/50 text-indigo-800 border border-indigo-100 font-mono text-center w-full py-2'
-                      }`}>
-                        {/* Sender Label & TTS Player */}
-                        {!isSys && (
-                          <div className="flex items-center justify-between gap-4 opacity-75 mb-1.5 border-b border-current/10 pb-0.5">
-                            <span className="text-[9px] font-bold uppercase tracking-wider font-sans">
-                              {isUser ? 'Tú (Defensor)' : isWitness ? selectedCase.testimony.witnessName : 'Su Señoría (Juez)'}
-                            </span>
-                            {isTtsSupported && (
-                              <button
-                                type="button"
-                                onClick={() => speakText(msg.text, true)}
-                                className="hover:opacity-100 transition-opacity p-0.5 cursor-pointer flex items-center justify-center rounded hover:bg-current/10"
-                                title="Escuchar mensaje"
-                              >
-                                <Volume2 className="w-3.5 h-3.5" />
-                              </button>
+                  <div key={index} className="space-y-3.5 py-1">
+                    {subMessages.map((sub, subIdx) => {
+                      const isUser = sub.sender === 'user';
+                      const isSys = sub.sender === 'system';
+                      const isJudge = sub.sender === 'judge';
+                      const isWitness = sub.sender === 'witness';
+                      const isFiscal = sub.sender === 'fiscal';
+                      const isAbogadoEmpresa = sub.sender === 'abogado_empresa';
+
+                      // Choose bubble alignment
+                      const alignment = isUser ? 'justify-end' : isSys ? 'justify-center' : 'justify-start';
+
+                      // Choose bubble style
+                      let bubbleStyle = 'bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200/60';
+                      if (isUser) {
+                        bubbleStyle = 'bg-blue-600 text-white rounded-br-none font-semibold';
+                      } else if (isSys) {
+                        bubbleStyle = 'bg-indigo-50/50 text-indigo-800 border border-indigo-100 font-mono text-center w-full py-2';
+                      } else if (isJudge) {
+                        bubbleStyle = 'bg-amber-50 text-amber-900 rounded-bl-none border border-amber-200';
+                      } else if (isFiscal) {
+                        bubbleStyle = 'bg-rose-50 text-rose-900 rounded-bl-none border border-rose-200';
+                      } else if (isAbogadoEmpresa) {
+                        bubbleStyle = 'bg-purple-50 text-purple-900 rounded-bl-none border border-purple-200';
+                      }
+
+                      // Label of the actor
+                      const actorLabel = sub.actorName || (isUser ? 'Tú (Defensor)' : isWitness ? selectedCase.testimony.witnessName : 'Su Señoría (Juez)');
+
+                      return (
+                        <div key={subIdx} className={`flex ${alignment} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                          <div className={`max-w-[85%] md:max-w-md rounded-2xl px-4 py-3 text-xs leading-relaxed font-medium ${bubbleStyle}`}>
+                            {/* Sender Label & TTS Player */}
+                            {!isSys && (
+                              <div className="flex items-center justify-between gap-4 opacity-75 mb-1.5 border-b border-current/10 pb-0.5">
+                                <span className="text-[9px] font-extrabold uppercase tracking-wider font-sans">
+                                  {actorLabel}
+                                </span>
+                                {isTtsSupported && (
+                                  <button
+                                    type="button"
+                                    onClick={() => speakText(sub.text, true)}
+                                    className="hover:opacity-100 transition-opacity p-0.5 cursor-pointer flex items-center justify-center rounded hover:bg-current/10"
+                                    title="Escuchar mensaje"
+                                  >
+                                    <Volume2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             )}
+                            <p>{sub.text}</p>
                           </div>
-                        )}
-                        <p>{msg.text}</p>
-                      </div>
-                    </div>
+                        </div>
+                      );
+                    })}
 
                     {/* Feedback block specifically for witness answer (educational assistance) */}
-                    {!isUser && msg.feedback && (
-                      <div className="ml-2 pl-4 border-l-2 border-emerald-500 py-1 max-w-lg">
+                    {msg.sender !== 'user' && msg.feedback && (
+                      <div className="ml-2 pl-4 border-l-2 border-emerald-500 py-1 max-w-lg animate-in fade-in duration-300">
                         <div className="flex items-center space-x-1">
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                           <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">RETROALIMENTACIÓN TÁCTICA</span>
@@ -1120,3 +1143,45 @@ function ObjectionModal({ onSelect, onClose }: ObjectionModalProps) {
     </div>
   );
 }
+
+// Helper to parse actor blocks from messages
+const parseMessageText = (text: string, defaultSender: 'user' | 'witness' | 'judge' | 'system') => {
+  if (defaultSender === 'system') {
+    return [{ sender: defaultSender, text }];
+  }
+
+  // Split by double newlines or single newlines that separate actors
+  const paragraphs = text.split(/\n\s*\n|\n(?=\s*\[[^\]]+\]:)/);
+  const parsed: { sender: 'user' | 'witness' | 'judge' | 'system' | 'fiscal' | 'abogado_empresa' | 'actor'; actorName?: string; text: string }[] = [];
+
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    if (!trimmed) continue;
+
+    // Check if it starts with [ACTOR]:
+    const match = trimmed.match(/^\[([^\]]+)\]:\s*([\s\S]*)$/);
+    if (match) {
+      const actorName = match[1].trim();
+      const content = match[2].trim();
+      
+      let sender: 'user' | 'witness' | 'judge' | 'system' | 'fiscal' | 'abogado_empresa' | 'actor' = 'actor';
+      const actorLower = actorName.toLowerCase();
+      
+      if (actorLower.includes('juez') || actorLower.includes('su señoría') || actorLower.includes('magistrado')) {
+        sender = 'judge';
+      } else if (actorLower.includes('fiscal')) {
+        sender = 'fiscal';
+      } else if (actorLower.includes('abogado de la empresa') || actorLower.includes('abogado corporativo') || actorLower.includes('abogado corporativ') || actorLower.includes('abogado de la emp')) {
+        sender = 'abogado_empresa';
+      } else {
+        sender = 'witness';
+      }
+      
+      parsed.push({ sender, actorName, text: content });
+    } else {
+      parsed.push({ sender: defaultSender, text: trimmed });
+    }
+  }
+
+  return parsed;
+};
