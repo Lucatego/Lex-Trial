@@ -25,7 +25,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
   ];
 
   return (
-    <aside id="sidebar-container" className="fixed bottom-0 left-0 right-0 h-16 md:h-screen md:sticky md:top-0 md:w-64 bg-[#0A1128] text-gray-300 flex flex-row md:flex-col justify-around md:justify-between border-t md:border-t-0 md:border-r border-[#1D2D44]/30 select-none z-50">
+    <aside id="sidebar-container" className="fixed bottom-4 left-4 right-4 rounded-2xl md:bottom-auto md:left-auto md:right-auto md:rounded-none h-16 md:h-screen md:sticky md:top-0 md:w-64 bg-[#0A1128] text-gray-300 flex flex-row md:flex-col justify-around md:justify-start border md:border-t-0 md:border-r border-[#1D2D44]/50 md:border-[#1D2D44]/30 select-none z-50 shadow-xl shadow-blue-900/20 md:shadow-none overflow-hidden md:overflow-visible">
       {/* Brand Logo & Header */}
       <div className="hidden md:block p-6 pb-0">
         <div className="flex items-center space-x-3 mb-8">
@@ -44,7 +44,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex flex-row md:flex-col items-center justify-around w-full md:w-auto md:space-y-1.5 px-2 py-0 md:p-6 md:pt-0 h-full md:h-auto">
+      <nav className="flex flex-row md:flex-col items-center justify-around md:justify-start w-full md:w-auto md:space-y-1.5 px-2 py-0 md:p-6 md:pt-0 h-full md:h-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -68,7 +68,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
         </nav>
 
       {/* Sidebar Footer Section */}
-      <div className="hidden md:block p-4 space-y-4">
+      <div className="hidden md:block p-4 space-y-4 md:mt-auto">
         {/* New Simulation Button */}
         <button
           id="btn-sidebar-new-simulation"

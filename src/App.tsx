@@ -172,7 +172,7 @@ export default function App() {
       />
 
       {/* Main View Container */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden mb-16 md:mb-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden mb-24 md:mb-0">
         
         {/* Top Header Panel */}
         <Header 
