@@ -18,7 +18,7 @@ export default function App() {
 
   // Initialize user progress exactly as pictured in the dashboard image
   const [userProgress, setUserProgress] = useState<UserProgress>({
-    name: 'Carlos',
+    name: 'Andrea Noriega',
     plan: 'Premium Plan',
     litigationScore: 78,
     efficacy: 85,
@@ -137,7 +137,7 @@ export default function App() {
     caseId: string
   ) => {
     const originCase = cases.find(c => c.id === caseId) || cases[0];
-    
+
     // Create new recent case record
     const newRecord: RecentCase = {
       id: `rc-${Date.now()}`,
@@ -193,7 +193,7 @@ export default function App() {
 
   return (
     <div id="applet-viewport" className="flex flex-col md:flex-row bg-[#F8FAFC] min-h-screen text-gray-800">
-      
+
       {/* Interactive Left Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -204,7 +204,7 @@ export default function App() {
 
       {/* Main View Container */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden mb-24 md:mb-0">
-        
+
         {/* Top Header Panel */}
         <Header
           userProgress={userProgress}
@@ -214,10 +214,10 @@ export default function App() {
 
         {/* Scrollable View Area */}
         <main className="flex-grow px-4 sm:px-8 py-6 overflow-y-auto w-full">
-          
+
           {/* View Routing Engine */}
           {currentView === 'despacho' && (
-            <Dashboard 
+            <Dashboard
               cases={cases}
               recentCases={recentCases}
               userProgress={userProgress}
@@ -235,11 +235,12 @@ export default function App() {
               onBackToDashboard={() => requestViewChange('despacho')}
               onSimulationComplete={handleSimulationComplete}
               onSimulationActiveChange={setSimulationActive}
+              onOpenNewCase={() => setShowNewCaseModal(true)}
             />
           )}
 
           {currentView === 'locker' && (
-            <Locker 
+            <Locker
               userProgress={userProgress}
               recentCases={recentCases}
               onShareCertificate={handleShareCertificate}
@@ -247,7 +248,7 @@ export default function App() {
           )}
 
           {currentView === 'perfil' && (
-            <Profile 
+            <Profile
               userProgress={userProgress}
               onUpdateProgress={handleUpdateProgress}
             />
@@ -258,7 +259,7 @@ export default function App() {
 
       {/* Interactive Dossier study modal */}
       {selectedCaseForDossier && (
-        <CaseDossierModal 
+        <CaseDossierModal
           caseItem={selectedCaseForDossier}
           onClose={() => setSelectedCaseForDossier(null)}
           onEnterArena={(caseId) => handleSelectCase(caseId, 'arena')}
@@ -285,13 +286,11 @@ export default function App() {
       {toast && (
         <div
           id="toast-notification"
-          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl border flex items-start space-x-3 max-w-sm duration-300 ${
-            toastClosing ? 'animate-out fade-out slide-out-to-right-4' : 'animate-in fade-in slide-in-from-right-4'
-          } ${
-            toast.type === 'linkedin'
+          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl border flex items-start space-x-3 max-w-sm duration-300 ${toastClosing ? 'animate-out fade-out slide-out-to-right-4' : 'animate-in fade-in slide-in-from-right-4'
+            } ${toast.type === 'linkedin'
               ? 'bg-[#0077B5] border-[#005B8C] text-white'
               : 'bg-emerald-600 border-emerald-700 text-white'
-          }`}
+            }`}
         >
           {toast.type === 'linkedin' ? (
             <Linkedin className="w-5 h-5 shrink-0 mt-0.5 fill-white stroke-none" />

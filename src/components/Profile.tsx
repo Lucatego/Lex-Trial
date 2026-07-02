@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Mail, 
-  Award, 
-  Scale, 
-  Star, 
-  Check, 
-  ShieldAlert, 
-  Save, 
+import {
+  User,
+  Mail,
+  Award,
+  Scale,
+  Star,
+  Check,
+  ShieldAlert,
+  Save,
   Sparkles,
   Zap
 } from 'lucide-react';
@@ -20,7 +20,7 @@ interface ProfileProps {
 
 export default function Profile({ userProgress, onUpdateProgress }: ProfileProps) {
   const [name, setName] = useState(userProgress.name);
-  const [email, setEmail] = useState('jhonatandavila27@gmail.com'); // Derived from metadata
+  const [email, setEmail] = useState('andreanoriega15@gmail.com'); // Derived from metadata
   const [specialty, setSpecialty] = useState<'Penal' | 'Civil' | 'Laboral'>('Penal');
   const [saved, setSaved] = useState(false);
 
@@ -39,7 +39,7 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
 
   return (
     <div className="space-y-8 pb-12 select-none animate-in fade-in duration-300">
-      
+
       {/* Title Header */}
       <div className="border-b border-gray-100 pb-5">
         <div className="flex items-center space-x-2">
@@ -50,14 +50,14 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
+
         {/* Left Card: Avatar and Premium Status */}
         <div className="lg:col-span-4 bg-[#0A1128] border border-[#1D2D44] text-white p-6 rounded-3xl shadow-xl space-y-6">
           <div className="text-center space-y-4">
             <div className="relative w-28 h-28 mx-auto">
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300"
-                alt="Carlos Avatar"
+                alt="Angela Avatar"
                 className="w-28 h-28 rounded-3xl object-cover border-2 border-yellow-500 shadow-md"
                 referrerPolicy="no-referrer"
               />
@@ -80,7 +80,7 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
           <div className="border-t border-white/10 pt-4 space-y-3 text-xs text-gray-300 font-medium">
             <div className="flex justify-between">
               <span>Suscrito desde:</span>
-              <span className="font-mono text-gray-400">Enero 2026</span>
+              <span className="font-mono text-gray-400">24/06/26</span>
             </div>
             <div className="flex justify-between">
               <span>Especialidad Principal:</span>
@@ -88,7 +88,7 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
             </div>
             <div className="flex justify-between">
               <span>Vencimiento Plan:</span>
-              <span className="font-mono text-yellow-400">01/01/2027</span>
+              <span className="font-mono text-yellow-400">24/07/2026</span>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
           <h4 className="font-sans font-bold text-base text-gray-950 border-b border-gray-100 pb-3">Detalles de la Cuenta</h4>
 
           <form onSubmit={handleSave} className="space-y-6">
-            
+
             {/* Input Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Name */}
@@ -106,9 +106,9 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
                 <label className="text-xs font-bold text-gray-500 uppercase">Nombre Completo</label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                  <input 
+                  <input
                     id="profile-name-input"
-                    type="text" 
+                    type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -122,9 +122,9 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
                 <label className="text-xs font-bold text-gray-500 uppercase">Correo de Enlace</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                  <input 
+                  <input
                     id="profile-email-input"
-                    type="email" 
+                    type="email"
                     value={email}
                     disabled
                     title="El correo no se puede cambiar"
@@ -137,7 +137,7 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
             {/* Specialties Picker */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-gray-500 uppercase block">Especialidad de Práctica Recomendada</label>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {specialties.map((spec) => {
                   const isSel = specialty === spec.id;
@@ -147,11 +147,10 @@ export default function Profile({ userProgress, onUpdateProgress }: ProfileProps
                       type="button"
                       id={`btn-spec-${spec.id}`}
                       onClick={() => setSpecialty(spec.id as any)}
-                      className={`p-4 text-left border rounded-2xl transition-all ${
-                        isSel 
-                          ? 'border-indigo-500 bg-indigo-50/40 shadow-sm' 
-                          : 'border-gray-200 bg-white hover:bg-gray-50'
-                      }`}
+                      className={`p-4 text-left border rounded-2xl transition-all ${isSel
+                        ? 'border-indigo-500 bg-indigo-50/40 shadow-sm'
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span className={`text-xs font-bold ${isSel ? 'text-indigo-700' : 'text-gray-800'}`}>

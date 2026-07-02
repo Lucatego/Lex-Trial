@@ -46,7 +46,7 @@ export default function Dashboard({
 
   return (
     <div className="space-y-8 pb-12 select-none animate-in fade-in duration-300">
-      
+
       {/* 1. Acceso Rápido Bar */}
       <div id="acc-rapido-container" className="bg-white rounded-2xl p-4 border border-gray-200/70 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
@@ -59,7 +59,7 @@ export default function Dashboard({
           </div>
         </div>
         <div className="flex items-center space-x-3 w-full sm:w-auto">
-          <button 
+          <button
             id="btn-acc-repasar-expediente"
             onClick={() => onSelectCase(suggestedCase.id, 'study')}
             className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 text-xs font-bold transition-all duration-150 flex items-center justify-center space-x-2"
@@ -67,7 +67,7 @@ export default function Dashboard({
             <BookOpen className="w-4 h-4 text-gray-500" />
             <span>Repasar Expediente</span>
           </button>
-          <button 
+          <button
             id="btn-acc-simulacion-rapida"
             onClick={() => onSelectCase(suggestedCase.id, 'arena')}
             className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-[#0A1128] hover:bg-[#1D2D44] text-white text-xs font-bold transition-all duration-150 flex items-center justify-center space-x-2 shadow-sm"
@@ -79,7 +79,7 @@ export default function Dashboard({
       </div>
 
       {/* 2. Main Hero Card (Banner) */}
-      <div 
+      <div
         id="hero-banner-card"
         className="relative overflow-hidden bg-gradient-to-br from-[#121E38] via-[#1D2D44] to-[#0A1128] rounded-3xl p-8 sm:p-10 border border-[#1D2D44]/40 shadow-xl flex items-center justify-between"
       >
@@ -91,10 +91,10 @@ export default function Dashboard({
             ¿Listo para tu próxima audiencia?
           </h3>
           <p className="text-sm sm:text-base text-gray-300 font-medium leading-relaxed">
-            Entrena tus destrezas de litigio hoy con nuestro motor de simulación de IA avanzado. 
+            Entrena tus destrezas de litigio hoy con nuestro motor de simulación de IA avanzado.
             Perfecciona tus contrainterrogatorios y responde objeciones en tiempo real.
           </p>
-          <button 
+          <button
             id="btn-hero-start-sim"
             onClick={() => onSelectCase(suggestedCase.id, 'arena')}
             className="flex items-center justify-center sm:justify-start space-x-2.5 bg-[#5B85F9] hover:bg-[#4971E3] text-white py-3.5 px-6 rounded-2xl font-bold text-sm transition-all duration-150 shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
@@ -115,7 +115,7 @@ export default function Dashboard({
 
       {/* 3. Three-Column Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Column A: Tu Despacho Virtual (Suggested Case Card) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center space-x-2">
@@ -129,8 +129,8 @@ export default function Dashboard({
           <div id="suggested-case-card" className="bg-white rounded-2xl border border-gray-200/80 shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col justify-between h-auto lg:h-[450px]">
             {/* Courtroom Image with Dark Overlay and text inside */}
             <div className="relative h-48 w-full bg-gray-900 shrink-0">
-              <img 
-                src={suggestedCase.image} 
+              <img
+                src={suggestedCase.image}
                 alt={suggestedCase.title}
                 className="w-full h-full object-cover opacity-60"
                 referrerPolicy="no-referrer"
@@ -158,7 +158,7 @@ export default function Dashboard({
                     Habilidad: {suggestedCase.skill}
                   </span>
                 </div>
-                
+
                 {/* Description */}
                 <p className="text-xs text-gray-600 font-medium leading-relaxed">
                   {suggestedCase.summary}
@@ -167,7 +167,7 @@ export default function Dashboard({
 
               {/* Actions */}
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <button 
+                <button
                   id="btn-case-estudiar"
                   onClick={() => onSelectCase(suggestedCase.id, 'study')}
                   className="flex items-center justify-center space-x-1.5 py-3 px-4 rounded-xl border border-gray-300 hover:bg-gray-50 text-xs font-bold text-gray-700 transition-colors"
@@ -175,8 +175,8 @@ export default function Dashboard({
                   <BookOpen className="w-4 h-4 text-gray-500" />
                   <span>ESTUDIAR EXPEDIENTE</span>
                 </button>
-                
-                <button 
+
+                <button
                   id="btn-case-entrar-arena"
                   onClick={() => onSelectCase(suggestedCase.id, 'arena')}
                   className="flex items-center justify-center space-x-1.5 py-3 px-4 rounded-xl bg-[#0A1128] hover:bg-[#1D2D44] text-xs font-bold text-white transition-colors"
@@ -202,21 +202,21 @@ export default function Dashboard({
               <div className="relative w-36 h-36 flex items-center justify-center">
                 {/* SVG Progress Circle */}
                 <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="42" 
-                    stroke="#E2E8F0" 
-                    strokeWidth="8" 
-                    fill="transparent" 
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="#E2E8F0"
+                    strokeWidth="8"
+                    fill="transparent"
                   />
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="42" 
-                    stroke="#1A56DB" 
-                    strokeWidth="8" 
-                    fill="transparent" 
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="#1A56DB"
+                    strokeWidth="8"
+                    fill="transparent"
                     strokeDasharray="263.89"
                     strokeDashoffset={barsMounted ? 263.89 - (263.89 * userProgress.litigationScore) / 100 : 263.89}
                     strokeLinecap="round"
@@ -229,7 +229,7 @@ export default function Dashboard({
                     <span className="font-sans font-extrabold text-3xl text-gray-900">{userProgress.litigationScore}</span>
                     <span className="text-xs text-gray-400 font-bold">/100</span>
                   </div>
-                  <span className="text-[9px] font-mono tracking-widest text-gray-400 font-bold block mt-1">
+                  <span className="text-[8px] font-mono tracking-widest text-gray-400 font-bold block mt-1">
                     SCORE DE LITIGIO
                   </span>
                 </div>
@@ -294,8 +294,8 @@ export default function Dashboard({
             {/* Recent Cases list */}
             <div className="space-y-4 overflow-y-auto max-h-[340px] pr-1">
               {recentCases.map((rc) => (
-                <div 
-                  key={rc.id} 
+                <div
+                  key={rc.id}
                   id={`recent-case-row-${rc.id}`}
                   className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-3.5 transition-all hover:bg-gray-100/50"
                 >
@@ -305,13 +305,12 @@ export default function Dashboard({
                         {rc.date}
                       </span>
                     </div>
-                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                      rc.status === 'Absolución' 
+                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${rc.status === 'Absolución'
                         ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                         : rc.status === 'Apelación'
-                        ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                        : 'bg-red-50 text-red-600 border border-red-100'
-                    }`}>
+                          ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                          : 'bg-red-50 text-red-600 border border-red-100'
+                      }`}>
                       {rc.status}
                     </span>
                   </div>
@@ -322,10 +321,10 @@ export default function Dashboard({
                       <span className="text-xs text-gray-500 font-bold font-mono">Score: {rc.score}/100</span>
                       <div className="flex space-x-0.5">
                         {Array.from({ length: 3 }).map((_, i) => (
-                          <svg 
-                            key={i} 
-                            className={`w-3.5 h-3.5 ${i < rc.stars ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                            viewBox="0 0 20 20" 
+                          <svg
+                            key={i}
+                            className={`w-3.5 h-3.5 ${i < rc.stars ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                            viewBox="0 0 20 20"
                             fill="currentColor"
                           >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -337,7 +336,7 @@ export default function Dashboard({
 
                   {/* Actions depending on case status */}
                   {rc.status === 'Absolución' ? (
-                    <button 
+                    <button
                       id={`btn-share-cert-${rc.id}`}
                       onClick={() => onShareCertificate(rc.title)}
                       className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 bg-[#D1E2FF] hover:bg-[#BBD6FF] text-[#002B7A] rounded-lg font-bold text-xs transition-colors"
@@ -346,7 +345,7 @@ export default function Dashboard({
                       <span>Compartir Certificado</span>
                     </button>
                   ) : (
-                    <button 
+                    <button
                       id={`btn-view-feedback-${rc.id}`}
                       onClick={() => onViewFeedback(rc.id)}
                       className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-bold text-xs transition-colors"
@@ -361,7 +360,7 @@ export default function Dashboard({
 
             {/* Bottom link */}
             <div className="text-center pt-3 border-t border-gray-100">
-              <button 
+              <button
                 id="btn-view-all-history"
                 onClick={() => onViewChange('locker')}
                 className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center justify-center space-x-1 w-full"

@@ -14,7 +14,14 @@ import {
   Check,
   Award,
   AlertTriangle,
-  Send
+  Send,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
+  FolderPlus,
+  FileText,
+  Plus
 } from 'lucide-react';
 import { Case, SimulationQuestion, RecentCase } from '../types';
 import { useModalA11y } from '../hooks/useModalA11y';
@@ -25,13 +32,34 @@ interface ArenaProps {
   onBackToDashboard: () => void;
   onSimulationComplete: (score: number, status: 'Absolución' | 'Condena' | 'Apelación', efficacy: number, legalTech: number, oratory: number, caseId: string) => void;
   onSimulationActiveChange?: (active: boolean) => void;
+  onOpenNewCase?: () => void;
 }
 
-export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimulationComplete, onSimulationActiveChange }: ArenaProps) {
+export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimulationComplete, onSimulationActiveChange, onOpenNewCase }: ArenaProps) {
   // Select initial case
   const [selectedCase, setSelectedCase] = useState<Case>(
     cases.find(c => c.id === activeCaseId) || cases[0]
   );
+
+  // View mode inside Arena: 'list' | 'briefing'
+  const [viewMode, setViewMode] = useState<'list' | 'briefing'>(
+    activeCaseId ? 'briefing' : 'list'
+  );
+
+  // Sync viewMode and selectedCase with activeCaseId prop changes
+  useEffect(() => {
+    if (activeCaseId) {
+      const match = cases.find(c => c.id === activeCaseId);
+      if (match) {
+        setSelectedCase(match);
+        setViewMode('briefing');
+        setGameStarted(false);
+      }
+    } else {
+      setViewMode('list');
+      setGameStarted(false);
+    }
+  }, [activeCaseId, cases]);
 
   // Simulation Game State
   const [gameStarted, setGameStarted] = useState(false);
@@ -46,6 +74,89 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
 
   // Custom Typed Input
   const [customInput, setCustomInput] = useState('');
+
+  // TTS and STT state
+  const [isTtsEnabled, setIsTtsEnabled] = useState(false);
+  const [isTtsSupported, setIsTtsSupported] = useState(false);
+  const [isSttSupported, setIsSttSupported] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Initialize Speech APIs
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ('speechSynthesis' in window) {
+        setIsTtsSupported(true);
+      }
+      
+      const SpeechLib = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechLib) {
+        setIsSttSupported(true);
+        const rec = new SpeechLib();
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.lang = 'es-ES';
+        
+        rec.onstart = () => {
+          setIsListening(true);
+        };
+        
+        rec.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setCustomInput(prev => prev + (prev ? ' ' : '') + transcript);
+        };
+        
+        rec.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+        };
+        
+        rec.onend = () => {
+          setIsListening(false);
+        };
+        
+        recognitionRef.current = rec;
+      }
+    }
+  }, []);
+
+  // Cleanup synthesis on change or unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const speakText = (text: string, force = false) => {
+    if ((!isTtsEnabled && !force) || !('speechSynthesis' in window)) return;
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    const voices = window.speechSynthesis.getVoices();
+    const spanishVoice = voices.find(v => v.lang.startsWith('es-') || v.lang.startsWith('es'));
+    if (spanishVoice) {
+      utterance.voice = spanishVoice;
+    } else {
+      utterance.lang = 'es-ES';
+    }
+    
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) return;
+    
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+  };
 
   // Custom case selector dropdown
   const [caseMenuOpen, setCaseMenuOpen] = useState(false);
@@ -108,6 +219,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
 
   // Handle case selection change
   const handleCaseChange = (c: Case) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     setSelectedCase(c);
     setGameStarted(false);
     setCurrentStep(0);
@@ -120,11 +234,16 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
   // Start the actual game simulation
   const handleStartSimulation = () => {
     setGameStarted(true);
+    const initialText = selectedCase.simulationScenario.initialMessage;
     setConversationHistory([
       { sender: 'system', text: `⚖️ Simulación Iniciada: ${selectedCase.title}. Estás actuando como Abogado Defensor Principal.` },
-      { sender: 'witness', text: selectedCase.simulationScenario.initialMessage }
+      { sender: 'witness', text: initialText }
     ]);
     setCurrentStep(1);
+
+    setTimeout(() => {
+      speakText(initialText);
+    }, 100);
   };
 
   // User selects an interrogation option
@@ -158,6 +277,8 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
           feedback: q.feedback
         }
       ]);
+
+      speakText(q.response);
 
       // Check if all questions are answered or we reached max steps (3)
       if (answeredQuestionIds.length + 1 >= Math.min(selectedCase.simulationScenario.questions.length, 3)) {
@@ -217,6 +338,8 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         }
       ]);
 
+      speakText(aiResponse);
+
       // Update metrics
       setCurrentMetrics(prev => ({
         efficacy: Math.min(100, prev.efficacy + Math.round(addedMetrics.efficacy / 2)),
@@ -248,11 +371,14 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
       explanation = 'Declara lugar la objeción, pero con apercibimiento. El juez te insta a encauzar el interrogatorio por la técnica formal.';
     }
 
+    const judgeResponse = isCorrect ? `Sustentada Abogado. El testigo se abstendrá de responder y se ordenará testar esa parte del acta.` : `No ha lugar, Abogado. Continúe con el interrogatorio.`;
     setConversationHistory(prev => [
       ...prev,
       { sender: 'system', text: `🛡️ Formulaste una Objeción por ser "${type}".` },
-      { sender: 'judge', text: isCorrect ? `Sustentada Abogado. El testigo se abstendrá de responder y se ordenará testar esa parte del acta.` : `No ha lugar, Abogado. Continúe con el interrogatorio.` }
+      { sender: 'judge', text: judgeResponse }
     ]);
+
+    speakText(judgeResponse);
 
     // Adjust metrics based on correctness
     setCurrentMetrics(prev => ({
@@ -290,6 +416,111 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     q => !answeredQuestionIds.includes(q.id)
   );
 
+  // BEFORE SIMULATION OR DURING BRIEFING: Case Selection Catalog (Lobby)
+  if (viewMode === 'list') {
+    return (
+      <div className="space-y-6 pb-12 select-none animate-in fade-in duration-300">
+        
+        {/* Upper Navigation & Title */}
+        <div className="flex items-center justify-between border-b border-gray-100 pb-5">
+          <div>
+            <div className="flex items-center space-x-2">
+              <Swords className="w-5 h-5 text-indigo-600 animate-in spin-in-12 duration-500" />
+              <h3 className="font-sans font-bold text-xl text-gray-950">La Arena de Litigio</h3>
+            </div>
+            <p className="text-xs text-gray-500 font-medium mt-0.5">Selecciona un expediente judicial de la lista para iniciar tu simulación.</p>
+          </div>
+        </div>
+
+        {/* Catalog Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card to create new case */}
+          <button
+            type="button"
+            id="btn-arena-new-case"
+            onClick={onOpenNewCase}
+            className="border-2 border-dashed border-gray-200 hover:border-indigo-500 rounded-3xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-white hover:bg-indigo-50/10 transition-all duration-300 min-h-[320px] group"
+          >
+            <div className="w-14 h-14 bg-indigo-50 group-hover:bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center transition-colors mb-4">
+              <FolderPlus className="w-6 h-6" />
+            </div>
+            <h4 className="font-sans font-bold text-sm text-gray-800 group-hover:text-indigo-700 transition-colors">Diseñar Nuevo Caso</h4>
+            <p className="text-[11px] text-gray-400 font-medium max-w-xs mt-1.5 leading-relaxed">
+              Carga tu propio expediente judicial o indícale temas a nuestra Inteligencia Artificial para generar una causa inmersiva.
+            </p>
+          </button>
+
+          {/* Render cases */}
+          {cases.map((c) => {
+            const isPenal = c.type === 'Penal';
+            const isCivil = c.type === 'Civil';
+            return (
+              <div
+                key={c.id}
+                className="bg-white border border-gray-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+              >
+                {/* Thumbnail Image */}
+                <div className="h-40 w-full relative bg-gray-950">
+                  <img
+                    src={c.image}
+                    alt={c.title}
+                    className="w-full h-full object-cover opacity-80"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4 text-white">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
+                        isPenal 
+                          ? 'bg-red-500/20 border-red-500/30 text-red-300' 
+                          : isCivil
+                          ? 'bg-blue-500/20 border-blue-500/30 text-blue-300'
+                          : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
+                      }`}>
+                        {c.type}
+                      </span>
+                      <span className="text-[9px] font-bold text-gray-300 bg-black/40 px-2 py-0.5 rounded">
+                        {c.difficulty}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-indigo-300 font-mono font-bold block mb-0.5">{c.exp}</span>
+                      <h4 className="font-sans font-black text-sm leading-tight text-white">{c.title}</h4>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content body */}
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-gray-500 font-medium leading-relaxed line-clamp-3">
+                      {c.summary}
+                    </p>
+                    <div className="flex items-center space-x-1 text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-lg w-fit">
+                      <Sparkles className="w-3 h-3" />
+                      <span>Foco: {c.skill}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCase(c);
+                      setViewMode('briefing');
+                    }}
+                    className="w-full py-2.5 bg-gray-950 hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition-colors text-center cursor-pointer flex items-center justify-center space-x-1.5"
+                  >
+                    <Swords className="w-3.5 h-3.5" />
+                    <span>PREPARAR AUDIENCIA</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-12 select-none animate-in fade-in duration-300">
       
@@ -298,9 +529,18 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         <div className="flex items-center space-x-3">
           <button 
             id="btn-arena-back"
-            onClick={onBackToDashboard}
-            className="p-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-xl transition-all"
-            title="Volver al Despacho"
+            onClick={() => {
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+              }
+              if (viewMode === 'briefing') {
+                setViewMode('list');
+              } else {
+                onBackToDashboard();
+              }
+            }}
+            className="p-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-xl transition-all cursor-pointer"
+            title={viewMode === 'briefing' ? 'Volver al Catálogo' : 'Volver al Despacho'}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -418,12 +658,39 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
               </ul>
             </div>
 
-            {/* Launch arena button */}
-            <div className="pt-4 flex justify-end">
+            {/* Options before starting */}
+            <div className="pt-6 border-t border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              {isTtsSupported ? (
+                <div className="flex items-center space-x-3 bg-indigo-50/70 border border-indigo-150 rounded-2xl p-3 px-4 max-w-sm">
+                  <div className="p-2 bg-indigo-100 text-indigo-700 rounded-xl animate-in fade-in duration-300">
+                    <Volume2 className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <label htmlFor="toggle-tts-briefing" className="text-xs font-bold text-gray-800 cursor-pointer select-none">
+                        Activar Texto a Voz (TTS)
+                      </label>
+                      <input 
+                        type="checkbox" 
+                        id="toggle-tts-briefing"
+                        checked={isTtsEnabled}
+                        onChange={(e) => setIsTtsEnabled(e.target.checked)}
+                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer accent-indigo-600"
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-500 font-medium">Escucha las declaraciones del testigo y del juez automáticamente.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[10px] text-gray-400 font-semibold italic">
+                  Lector de voz no compatible con este navegador
+                </div>
+              )}
+              
               <button
                 id="btn-arena-launch"
                 onClick={handleStartSimulation}
-                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all shadow-md shadow-indigo-600/15"
+                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all shadow-md shadow-indigo-600/15 self-end sm:self-center cursor-pointer"
               >
                 <Swords className="w-4 h-4 text-white" />
                 <span>INICIAR SIMULACIÓN AHORA</span>
@@ -468,8 +735,32 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                 <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
                 <span className="text-xs font-mono font-bold text-gray-600">SALA DE JUICIO EN VIVO</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-500 font-bold font-mono">Preguntas Formuladas: {answeredQuestionIds.length}</span>
+              
+              <div className="flex items-center space-x-3">
+                {isTtsSupported && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newTtsVal = !isTtsEnabled;
+                      setIsTtsEnabled(newTtsVal);
+                      if (!newTtsVal && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                      }
+                    }}
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 border rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isTtsEnabled 
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' 
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                    title={isTtsEnabled ? 'Desactivar Texto a Voz' : 'Activar Texto a Voz'}
+                  >
+                    {isTtsEnabled ? <Volume2 className="w-3.5 h-3.5 text-indigo-600 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5 text-gray-400" />}
+                    <span className="hidden sm:inline">Texto a Voz</span>
+                  </button>
+                )}
+                <span className="text-xs text-gray-500 font-bold font-mono bg-white border border-gray-100 px-2.5 py-1 rounded-xl">
+                  Preguntas Formuladas: {answeredQuestionIds.length}
+                </span>
               </div>
             </div>
 
@@ -493,11 +784,23 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                           ? 'bg-amber-50 text-amber-900 rounded-bl-none border border-amber-200'
                           : 'bg-indigo-50/50 text-indigo-800 border border-indigo-100 font-mono text-center w-full py-2'
                       }`}>
-                        {/* Sender Label */}
+                        {/* Sender Label & TTS Player */}
                         {!isSys && (
-                          <p className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-1">
-                            {isUser ? 'Tú (Defensor)' : isWitness ? selectedCase.testimony.witnessName : 'Su Señoría (Juez)'}
-                          </p>
+                          <div className="flex items-center justify-between gap-4 opacity-75 mb-1.5 border-b border-current/10 pb-0.5">
+                            <span className="text-[9px] font-bold uppercase tracking-wider font-sans">
+                              {isUser ? 'Tú (Defensor)' : isWitness ? selectedCase.testimony.witnessName : 'Su Señoría (Juez)'}
+                            </span>
+                            {isTtsSupported && (
+                              <button
+                                type="button"
+                                onClick={() => speakText(msg.text, true)}
+                                className="hover:opacity-100 transition-opacity p-0.5 cursor-pointer flex items-center justify-center rounded hover:bg-current/10"
+                                title="Escuchar mensaje"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         )}
                         <p>{msg.text}</p>
                       </div>
@@ -611,15 +914,31 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                       value={customInput}
                       onChange={(e) => setCustomInput(e.target.value)}
                       placeholder="Escribe tu propio argumento legal o pregunta al perito..."
-                      className="w-full bg-white border border-gray-200 rounded-2xl py-3 pl-4 pr-12 text-xs text-gray-800 placeholder-gray-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full bg-white border border-gray-200 rounded-2xl py-3 pl-4 pr-24 text-xs text-gray-800 placeholder-gray-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all animate-in fade-in duration-350"
                     />
-                    <button 
-                      type="submit"
-                      id="btn-send-custom-argument"
-                      className="absolute right-2 top-2 p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="absolute right-2 top-2 flex items-center space-x-1.5">
+                      {isSttSupported && (
+                        <button
+                          type="button"
+                          onClick={toggleListening}
+                          className={`p-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+                            isListening 
+                              ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                              : 'bg-gray-150 hover:bg-gray-200 text-gray-600'
+                          }`}
+                          title={isListening ? 'Detener grabación' : 'Dictar por voz (Voz a Texto)'}
+                        >
+                          {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                      <button 
+                        type="submit"
+                        id="btn-send-custom-argument"
+                        className="p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </form>
                 </>
               )}

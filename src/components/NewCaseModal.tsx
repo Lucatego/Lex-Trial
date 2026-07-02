@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Sparkles, Scale, Swords, CheckCircle, BrainCircuit, ChevronDown, Check } from 'lucide-react';
+import { X, Sparkles, Scale, Swords, CheckCircle, BrainCircuit, ChevronDown, Check, Upload, FileText } from 'lucide-react';
 import { Case } from '../types';
 import { useModalA11y } from '../hooks/useModalA11y';
 
@@ -19,6 +19,13 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
   const [titleError, setTitleError] = useState(false);
   const [shake, setShake] = useState(false);
 
+  // Tabs and document upload state
+  const [activeTab, setActiveTab] = useState<'form' | 'upload'>('form');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Play the exit animation before actually unmounting the modal
   const handleClose = () => {
     setIsClosing(true);
@@ -26,6 +33,128 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
   };
 
   const containerRef = useModalA11y<HTMLDivElement>(handleClose);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      if (['pdf', 'txt', 'docx'].includes(fileExt || '')) {
+        setUploadedFile(file);
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploadedFile(e.target.files[0]);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleUploadSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadedFile) return;
+
+    setGenerating(true);
+    setLoadingStep(0);
+
+    const timer = setInterval(() => {
+      setLoadingStep(prev => {
+        if (prev < 3) return prev + 1;
+        clearInterval(timer);
+        return prev;
+      });
+    }, 600);
+
+    setTimeout(() => {
+      const fileNameLower = uploadedFile.name.toLowerCase();
+      let detectedType: 'Penal' | 'Civil' | 'Laboral' = 'Penal';
+      let detectedSkill = 'Contrainterrogatorio';
+      
+      if (fileNameLower.includes('civil') || fileNameLower.includes('dano') || fileNameLower.includes('contrat') || fileNameLower.includes('arriend')) {
+        detectedType = 'Civil';
+        detectedSkill = 'Interrogatorio Directo';
+      } else if (fileNameLower.includes('laboral') || fileNameLower.includes('despid') || fileNameLower.includes('trabaj')) {
+        detectedType = 'Laboral';
+        detectedSkill = 'Interrogatorio Directo';
+      } else if (fileNameLower.includes('objecion')) {
+        detectedSkill = 'Responder Objeciones';
+      }
+      
+      const cleanTitle = uploadedFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+
+      const newCase: Case = {
+        id: `custom-case-${Date.now()}`,
+        exp: `Exp: ${Math.floor(100 + Math.random() * 900)}-2026`,
+        title: cleanTitle,
+        type: detectedType,
+        difficulty: difficulty,
+        skill: detectedSkill,
+        image: detectedType === 'Civil' 
+          ? 'https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=800' 
+          : detectedType === 'Laboral'
+          ? 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800'
+          : 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=800',
+        summary: `Caso procesal extraído inteligentemente del documento "${uploadedFile.name}". Se enfoca en las contradicciones fácticas del expediente.`,
+        facts: [
+          `Se constata el incidente reportado en el folio principal del expediente extraído del archivo ${uploadedFile.name}.`,
+          'Existen múltiples declaraciones testimoniales que presentan claras ambigüedades técnicas.',
+          'La defensa técnica procesal requiere desestimar o ratificar la veracidad científica de las pruebas.'
+        ],
+        evidence: [
+          { name: 'Documento Técnico Procesal', description: `Extractos analizados del archivo ${uploadedFile.name}.` },
+          { name: 'Acta de Inspección Ocular', description: 'Registro gráfico y escrito de las coordenadas geográficas de los hechos.' }
+        ],
+        testimony: {
+          witnessName: 'Lic. Armando Guerra',
+          witnessRole: 'Testigo Clave del Proceso',
+          statement: 'Yo estuve a escasos metros del lugar del incidente y presencié todo con claridad fidedigna.'
+        },
+        simulationScenario: {
+          witnessName: 'Lic. Armando Guerra (Testigo Clave)',
+          initialMessage: `Buenas tardes Abogado. El tribunal me ha citado para dar testimonio sobre el expediente. ¿Listo para el debate judicial?`,
+          questions: [
+            {
+              id: 'cq1',
+              text: 'Licenciado, ¿podría explicar cómo es posible que recuerde con tanta precisión dadas las malas condiciones de iluminación nocturna?',
+              response: 'Bueno... reconozco que la noche estaba oscura y lluviosa, pero la luz del poste público incidía de lleno en el rostro del acusado.',
+              impact: { efficacy: 90, legalTech: 85, oratory: 80 },
+              feedback: 'Excelente inicio. Sifonas credibilidad basándote en un factor ambiental directo.'
+            },
+            {
+              id: 'cq2',
+              text: 'Si la visibilidad estaba obstaculizada por árboles, ¿no le resulta imposible haber visto las manos del acusado?',
+              response: 'Quizás... vi un bulto y un destello. Supuse que era un arma por los gritos, pero admito que no puedo jurar la forma exacta.',
+              impact: { efficacy: 95, legalTech: 95, oratory: 90 },
+              feedback: 'Perfecto. Lograste desarticular el testimonio asertivo convirtiéndolo en una suposición.'
+            }
+          ]
+        }
+      };
+
+      onCaseGenerated(newCase);
+      clearInterval(timer);
+      setGenerating(false);
+      onClose();
+    }, 2400);
+  };
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,19 +256,61 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
           <p className="text-[11px] text-gray-400 mt-1 font-medium">Especifica los parámetros de tu caso legal para que nuestra IA ensamble el dossier procesal de manera inmediata.</p>
         </div>
 
+        {/* Tab Selector */}
+        {!generating && (
+          <div className="flex border-b border-gray-100 bg-gray-50/50 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab('form')}
+              className={`flex-1 py-3.5 text-xs font-bold transition-all text-center cursor-pointer border-b-2 ${
+                activeTab === 'form'
+                  ? 'border-indigo-600 text-indigo-700 bg-white'
+                  : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-100/50'
+              }`}
+            >
+              Generar con IA (Formulario)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('upload')}
+              className={`flex-1 py-3.5 text-xs font-bold transition-all text-center cursor-pointer border-b-2 ${
+                activeTab === 'upload'
+                  ? 'border-indigo-600 text-indigo-700 bg-white'
+                  : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-100/50'
+              }`}
+            >
+              Subir Expediente (PDF / TXT / DOCX)
+            </button>
+          </div>
+        )}
+
         {generating ? (
           <div className="p-12 text-center space-y-4 flex flex-col items-center justify-center min-h-[300px]">
-            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-2" />
             <div className="space-y-1">
-              <h5 className="font-sans font-bold text-sm text-gray-800 flex items-center justify-center space-x-1">
-                <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
-                <span>Estructurando Dossier Judicial...</span>
+              <h5 className="font-sans font-bold text-sm text-gray-800 flex items-center justify-center space-x-1.5">
+                <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse animate-bounce" />
+                <span>
+                  {activeTab === 'upload' 
+                    ? 'Procesando Documento...' 
+                    : 'Estructurando Dossier Judicial...'}
+                </span>
               </h5>
-              <p className="text-xs text-gray-400 font-medium max-w-xs mx-auto">Construyendo cronología fáctica, redactando testimonio jurado y calibrando ramificaciones de objeciones con IA.</p>
+              <p className="text-xs text-gray-400 font-semibold max-w-xs mx-auto transition-all duration-300 min-h-[32px]">
+                {activeTab === 'upload'
+                  ? [
+                      "Leyendo y extrayendo texto del documento...",
+                      "Analizando hechos procesales y relevancia legal...",
+                      "Redactando testimonio jurado de testigo clave...",
+                      "Calibrando simulador de objeciones e interrogatorio..."
+                    ][loadingStep]
+                  : "Construyendo cronología fáctica, redactando testimonio jurado y calibrando ramificaciones de objeciones con IA."
+                }
+              </p>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleGenerate} className="p-6 space-y-5">
+        ) : activeTab === 'form' ? (
+          <form onSubmit={handleGenerate} className="p-6 space-y-5 overflow-y-auto max-h-[400px]">
             
             {/* Title */}
             <div className="space-y-1.5">
@@ -253,6 +424,106 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
               </button>
             </div>
 
+          </form>
+        ) : (
+          <form onSubmit={handleUploadSubmit} className="p-6 space-y-5">
+            {/* Upload Area */}
+            <div 
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+              onClick={triggerFileInput}
+              className={`border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center min-h-[180px] ${
+                dragActive 
+                  ? 'border-indigo-500 bg-indigo-50/20' 
+                  : 'border-gray-200 hover:border-indigo-400 bg-gray-50/50 hover:bg-gray-50'
+              }`}
+            >
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept=".pdf,.txt,.docx"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              
+              {uploadedFile ? (
+                <div className="space-y-3">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto">
+                    <FileText className="w-6 h-6 animate-bounce" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-800 truncate max-w-xs">{uploadedFile.name}</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setUploadedFile(null);
+                    }}
+                    className="text-[10px] font-bold text-red-500 hover:text-red-700 cursor-pointer"
+                  >
+                    Eliminar archivo
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto group-hover:bg-indigo-100 transition-colors">
+                    <Upload className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-700">Arrastra tu expediente aquí o haz clic para examinar</p>
+                    <p className="text-[10px] text-gray-400 font-semibold mt-1">Soporta PDF, TXT y DOCX (máx. 10MB)</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Difficulty field for uploaded case */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase">Dificultad del Caso Generado</label>
+              <CustomSelect
+                id="upload-case-difficulty"
+                label="Dificultad del Caso"
+                value={difficulty}
+                onChange={(v) => setDifficulty(v as typeof difficulty)}
+                options={[
+                  { value: 'Principiante', label: 'Principiante (1 estrella)' },
+                  { value: 'Intermedia', label: 'Intermedia (2 estrellas)' },
+                  { value: 'Avanzada', label: 'Avanzada (3 estrellas)' }
+                ]}
+              />
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="border-t border-gray-100 pt-4 flex justify-end space-x-3">
+              <button
+                type="button"
+                id="btn-new-case-upload-cancel"
+                onClick={handleClose}
+                className="px-4 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-100 text-xs font-bold text-gray-700 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                id="btn-new-case-upload-submit"
+                disabled={!uploadedFile}
+                className={`flex items-center space-x-1.5 px-5 py-2.5 text-white text-xs font-bold rounded-xl transition-all shadow ${
+                  uploadedFile 
+                    ? 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer' 
+                    : 'bg-indigo-400 cursor-not-allowed opacity-50'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                <span>PROCESAR Y GENERAR</span>
+              </button>
+            </div>
           </form>
         )}
 

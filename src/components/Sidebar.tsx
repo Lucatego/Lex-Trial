@@ -1,22 +1,28 @@
-import { 
-  Briefcase, 
-  Swords, 
-  Lock, 
-  User, 
-  Plus, 
-  Star,
-  Scale
+import {
+  Briefcase,
+  Swords,
+  Lock,
+  User,
+  Plus,
+  Star
 } from 'lucide-react';
 import { UserProgress } from '../types';
 
 interface SidebarProps {
   currentView: string;
   onViewChange: (view: string) => void;
-  onOpenNewCase: () => void;
   userProgress: UserProgress;
+  onOpenNewCase: () => void;
+  onLeaveSimulationPending?: () => void;
 }
 
-export default function Sidebar({ currentView, onViewChange, onOpenNewCase, userProgress }: SidebarProps) {
+export default function Sidebar({
+  currentView,
+  onViewChange,
+  userProgress,
+  onOpenNewCase,
+  onLeaveSimulationPending
+}: SidebarProps) {
   const menuItems = [
     { id: 'despacho', label: 'Despacho Virtual', icon: Briefcase },
     { id: 'arena', label: 'La Arena', icon: Swords },
@@ -33,9 +39,57 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
           onClick={() => onViewChange('despacho')}
           className="flex items-center space-x-3 mb-8 hover:opacity-80 transition-opacity text-left"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Scale className="w-5 h-5 text-white" />
-          </div>
+          <svg viewBox="0 0 100 100" className="w-10 h-10 drop-shadow-md shrink-0" xmlns="http://www.w3.org/2000/svg">
+            <polygon 
+              points="50,6 88,28 88,72 50,94 12,72 12,28" 
+              stroke="#F8FAFC" 
+              strokeWidth="7" 
+              fill="none" 
+              strokeLinejoin="round" 
+            />
+            <line 
+              x1="50" 
+              y1="22" 
+              x2="50" 
+              y2="34" 
+              stroke="#F8FAFC" 
+              strokeWidth="4.5" 
+              strokeLinecap="round" 
+            />
+            <line 
+              x1="50" 
+              y1="66" 
+              x2="50" 
+              y2="78" 
+              stroke="#F8FAFC" 
+              strokeWidth="4.5" 
+              strokeLinecap="round" 
+            />
+            <line 
+              x1="22" 
+              y1="43" 
+              x2="78" 
+              y2="43" 
+              stroke="#3B82F6" 
+              strokeWidth="5.5" 
+              strokeLinecap="round" 
+            />
+            <line 
+              x1="22" 
+              y1="57" 
+              x2="78" 
+              y2="57" 
+              stroke="#3B82F6" 
+              strokeWidth="5.5" 
+              strokeLinecap="round" 
+            />
+            <circle 
+              cx="50" 
+              cy="50" 
+              r="14" 
+              fill="#F8FAFC" 
+            />
+          </svg>
           <div>
             <h1 className="font-sans font-bold text-lg tracking-tight text-white flex items-center space-x-1">
               <span>LexTrial</span>
@@ -49,27 +103,26 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
 
       {/* Navigation Links */}
       <nav className="flex flex-row md:flex-col items-center justify-around md:justify-start w-full md:w-auto md:space-y-1.5 px-2 py-0 md:p-6 md:pt-0 h-full md:h-auto">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                id={`sidebar-nav-${item.id}`}
-                onClick={() => onViewChange(item.id)}
-                className={`flex flex-col md:flex-row items-center justify-center md:justify-start space-y-1 md:space-y-0 md:space-x-3 w-16 md:w-full px-1 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-200 font-sans text-sm font-medium h-full md:h-auto ${
-                  isActive
-                    ? 'bg-white/5 md:bg-transparent md:bg-gradient-to-r md:from-blue-900/40 md:to-indigo-900/20 text-blue-400 md:border-l-4 md:border-blue-500 md:pl-3'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              id={`sidebar-nav-${item.id}`}
+              onClick={() => onViewChange(item.id)}
+              className={`flex flex-col md:flex-row items-center justify-center md:justify-start space-y-1 md:space-y-0 md:space-x-3 w-16 md:w-full px-1 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-200 font-sans text-sm font-medium h-full md:h-auto ${isActive
+                  ? 'bg-white/5 md:bg-transparent md:bg-gradient-to-r md:from-blue-900/40 md:to-indigo-900/20 text-blue-400 md:border-l-4 md:border-blue-500 md:pl-3'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
-                title={item.label}
-              >
-                <Icon className={`w-6 h-6 md:w-5 md:h-5 shrink-0 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
-                <span className="hidden md:inline-block md:flex-1 md:whitespace-nowrap md:text-left">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+              title={item.label}
+            >
+              <Icon className={`w-6 h-6 md:w-5 md:h-5 shrink-0 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
+              <span className="hidden md:inline-block md:flex-1 md:whitespace-nowrap md:text-left">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Sidebar Footer Section */}
       <div className="hidden md:block p-4 space-y-4 md:mt-auto">
@@ -84,7 +137,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
         </button>
 
         {/* User Card */}
-        <div 
+        <div
           id="user-profile-card"
           onClick={() => onViewChange('perfil')}
           className="flex items-center space-x-3 p-3 bg-white/5 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all duration-200"
@@ -92,7 +145,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
           <div className="relative">
             <img
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150"
-              alt="Carlos Avatar"
+              alt="Angela Avatar"
               className="w-10 h-10 rounded-xl object-cover border border-blue-400/30"
               referrerPolicy="no-referrer"
             />
