@@ -25,6 +25,11 @@ import {
 } from 'lucide-react';
 import { Case, SimulationQuestion, RecentCase } from '../types';
 import { useModalA11y } from '../hooks/useModalA11y';
+import {
+  elevenLabsSpeakText,
+  stopElevenLabsAudio,
+  isElevenLabsConfigured
+} from '../services/elevenLabsTts';
 
 interface ArenaProps {
   cases: Case[];
@@ -82,10 +87,133 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
+  // Voice Mode state
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isAiSpeakingSimulated, setIsAiSpeakingSimulated] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+
+  const isSpeakingState = isAiSpeakingSimulated || isWitnessTyping;
+
+  // Sync ref to avoid stale closures in event listeners
+  const isVoiceModeRef = useRef(isVoiceMode);
+  useEffect(() => {
+    isVoiceModeRef.current = isVoiceMode;
+    if (isVoiceMode) {
+      setIsTtsEnabled(true);
+    }
+  }, [isVoiceMode]);
+
+  // Live Call Timer effect
+  useEffect(() => {
+    let interval: any = null;
+    if (isVoiceMode && !gameOver) {
+      interval = setInterval(() => {
+        setCallDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      setCallDuration(0);
+    }
+    return () => clearInterval(interval);
+  }, [isVoiceMode, gameOver]);
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleVoiceSubmitRef = useRef<(text: string) => void>(() => {});
+
+  // Update handleVoiceSubmitRef on every render
+  useEffect(() => {
+    handleVoiceSubmitRef.current = (text: string) => {
+      if (!text.trim() || gameOver) return;
+      
+      // Add user spoken text
+      setConversationHistory(prev => [
+        ...prev,
+        { sender: 'user', text }
+      ]);
+
+      // Simulate AI witness response
+      setIsWitnessTyping(true);
+      setTimeout(() => {
+        setIsWitnessTyping(false);
+        let aiResponse = '';
+        let aiFeedback = '';
+        let addedMetrics = { efficacy: 5, legalTech: 5, oratory: 5 };
+
+        const textLower = text.toLowerCase();
+        if (textLower.includes('arma') || textLower.includes('cuchillo') || textLower.includes('forense')) {
+          aiResponse = 'El peritaje científico se circunscribe a las marcas de transferencia de tejido. Si bien había un cuchillo cerca del deceso, la posición escapular no sugiere forcejeo previo de cara.';
+          aiFeedback = '¡Gran análisis técnico! Mencionar el arma secundaria añade presión procesal.';
+          addedMetrics = { efficacy: 15, legalTech: 10, oratory: 12 };
+        } else if (textLower.includes('miente') || textLower.includes('falso') || textLower.includes('contradice')) {
+          aiResponse = '¡Objeción del fiscal! El abogado está acosando al perito sin fundamentos.';
+          aiFeedback = 'Cuidado con el tono beligerante. Sostener contradicciones requiere sustentar con folios específicos del expediente.';
+          addedMetrics = { efficacy: -5, legalTech: -10, oratory: 15 };
+        } else {
+          aiResponse = 'Abogado, considero que mi metodología en la necropsia se apegó estrictamente a los protocolos oficiales de medicina legal.';
+          aiFeedback = 'Pregunta legalmente válida. Te aconsejo enfocar el interrogatorio en el plano físico-espacial para desgastar la teoría fiscal.';
+          addedMetrics = { efficacy: 8, legalTech: 8, oratory: 10 };
+        }
+
+        setConversationHistory(prev => [
+          ...prev,
+          { 
+            sender: 'witness', 
+            text: aiResponse,
+            feedback: aiFeedback
+          }
+        ]);
+
+        speakText(aiResponse);
+
+        // Update metrics
+        setCurrentMetrics(prev => ({
+          efficacy: Math.min(100, prev.efficacy + Math.round(addedMetrics.efficacy / 2)),
+          legalTech: Math.min(100, prev.legalTech + Math.round(addedMetrics.legalTech / 2)),
+          oratory: Math.min(100, prev.oratory + Math.round(addedMetrics.oratory / 2))
+        }));
+
+        // Check if we need to end
+        if (answeredQuestionIds.length >= 2) {
+          setTimeout(() => setGameOver(true), 1200);
+        }
+      }, 1500);
+    };
+  });
+
+  // Manage SpeechRecognition active state in Voice Mode
+  useEffect(() => {
+    if (!recognitionRef.current || !isVoiceMode) {
+      if (isListening && recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      return;
+    }
+
+    if (isMicMuted || isSpeakingState || gameOver) {
+      if (isListening) {
+        recognitionRef.current.stop();
+      }
+    } else {
+      if (!isListening) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          console.error("Failed to start speech recognition", e);
+        }
+      }
+    }
+  }, [isVoiceMode, isMicMuted, isSpeakingState, isListening, gameOver]);
+
   // Initialize Speech APIs
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if ('speechSynthesis' in window) {
+      // TTS is supported if browser has speechSynthesis OR ElevenLabs is configured
+      if ('speechSynthesis' in window || isElevenLabsConfigured()) {
         setIsTtsSupported(true);
       }
       
@@ -103,7 +231,11 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         
         rec.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript;
-          setCustomInput(prev => prev + (prev ? ' ' : '') + transcript);
+          if (isVoiceModeRef.current) {
+            handleVoiceSubmitRef.current(transcript);
+          } else {
+            setCustomInput(prev => prev + (prev ? ' ' : '') + transcript);
+          }
         };
         
         rec.onerror = (event: any) => {
@@ -123,32 +255,46 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
   // Cleanup synthesis on change or unmount
   useEffect(() => {
     return () => {
+      stopElevenLabsAudio();
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
     };
   }, []);
 
-  const speakText = (text: string, force = false) => {
-    if ((!isTtsEnabled && !force) || !('speechSynthesis' in window)) return;
-    
+  /** Browser Web Speech API fallback for when ElevenLabs is not available */
+  const browserSpeakText = (text: string) => {
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    
-    // Clean up bracket tags like [ACTOR]: for a more natural spoken narration
     const cleanText = text.replace(/\[([^\]]+)\]:/g, '$1:');
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    
     const voices = window.speechSynthesis.getVoices();
     const spanishVoice = voices.find(v => v.lang.startsWith('es-') || v.lang.startsWith('es'));
-    if (spanishVoice) {
-      utterance.voice = spanishVoice;
-    } else {
-      utterance.lang = 'es-ES';
-    }
-    
+    if (spanishVoice) utterance.voice = spanishVoice;
+    else utterance.lang = 'es-ES';
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
-    window.speechSynthesis.speak(utterance);
+    setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+  };
+
+  const speakText = (text: string, force = false) => {
+    if (!isTtsEnabled && !force) return;
+    if (isElevenLabsConfigured()) {
+      // Use ElevenLabs with browser TTS as fallback
+      elevenLabsSpeakText(text, browserSpeakText);
+    } else {
+      // Browser Web Speech API only
+      browserSpeakText(text);
+    }
+  };
+
+  const unlockTts = () => {
+    // ElevenLabs doesn't need an unlock, only the Web Speech API does
+    if (!isElevenLabsConfigured() && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance("");
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    }
   };
 
   const toggleListening = () => {
@@ -222,6 +368,8 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
 
   // Handle case selection change
   const handleCaseChange = (c: Case) => {
+    // Stop audio and abort any in-flight ElevenLabs request immediately
+    stopElevenLabsAudio();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -244,6 +392,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     ]);
     setCurrentStep(1);
 
+    unlockTts();
     setTimeout(() => {
       speakText(initialText);
     }, 100);
@@ -298,6 +447,8 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customInput.trim()) return;
+
+    unlockTts();
 
     const text = customInput;
     setCustomInput('');
@@ -532,7 +683,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         <div className="flex items-center space-x-3">
           <button 
             id="btn-arena-back"
-            onClick={() => {
+          onClick={() => {
+              // Stop audio and abort any pending ElevenLabs API request
+              stopElevenLabsAudio();
               if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
               }
@@ -677,7 +830,13 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                         type="checkbox" 
                         id="toggle-tts-briefing"
                         checked={isTtsEnabled}
-                        onChange={(e) => setIsTtsEnabled(e.target.checked)}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          setIsTtsEnabled(val);
+                          if (val) {
+                            unlockTts();
+                          }
+                        }}
                         className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                       />
                     </div>
@@ -730,8 +889,143 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         /* DURING SIMULATION: Courtroom Simulator Console */
         <div id="sim-console" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch min-h-[500px]">
           
-          {/* Left Console: Dialogue Screen & Options */}
-          <div className="lg:col-span-8 flex flex-col justify-between bg-white border border-gray-200/80 rounded-3xl shadow-md overflow-hidden">
+          {/* Left Console: Dialogue Screen & Options or Audio-Only Mode */}
+          {isVoiceMode ? (
+            /* AUDIO-ONLY VOICE VUI VIEW */
+            <div className="lg:col-span-8 flex flex-col justify-between bg-[#0F172A] border border-gray-800 rounded-3xl shadow-md overflow-hidden text-white transition-colors duration-500 relative min-h-[500px]">
+              
+              {/* Header of Audio Console */}
+              <div className="bg-[#1E293B]/45 border-b border-gray-800/80 px-6 py-4 flex items-center justify-between">
+                {/* Witness Profile and Info */}
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <img 
+                      src={selectedCase.image}
+                      alt={selectedCase.testimony.witnessName} 
+                      className="w-10 h-10 rounded-full object-cover border-2 border-indigo-500/50"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#0F172A] rounded-full" />
+                  </div>
+                  <div>
+                    <h4 className="font-sans font-bold text-xs text-white">{selectedCase.testimony.witnessName}</h4>
+                    <p className="text-[10px] text-indigo-400 font-semibold">{selectedCase.testimony.witnessRole}</p>
+                  </div>
+                </div>
+
+                {/* Call Timer and Red Dot */}
+                <div className="flex items-center space-x-3 bg-black/40 px-3 py-1.5 rounded-full border border-gray-800">
+                  <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse-red" />
+                  <span className="text-[10px] text-gray-300 font-bold font-mono tracking-wider">
+                    REC {formatTimer(callDuration)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Middle Section: Visualizer & Text */}
+              <div className="flex-grow flex flex-col items-center justify-center p-8 relative">
+                
+                {/* Toggle for presentation purposes */}
+                <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 bg-white/5 border border-white/10 p-2 rounded-xl backdrop-blur-sm">
+                  <label htmlFor="toggle-ai-speech" className="text-[9px] text-gray-400 font-bold font-mono uppercase cursor-pointer select-none">
+                    Simular Habla IA
+                  </label>
+                  <input 
+                    type="checkbox" 
+                    id="toggle-ai-speech"
+                    checked={isAiSpeakingSimulated}
+                    onChange={(e) => setIsAiSpeakingSimulated(e.target.checked)}
+                    className="w-3.5 h-3.5 text-indigo-650 border-gray-700 rounded focus:ring-indigo-500 cursor-pointer accent-indigo-500"
+                  />
+                </div>
+
+                {/* Central Area */}
+                <div className="relative flex items-center justify-center w-52 h-52">
+                  {isSpeakingState ? (
+                    /* AI Speaking State: Animated Equalizer Waveform */
+                    <div className="flex items-end justify-center gap-2 h-24 w-44">
+                      <div className="w-3 bg-blue-500 rounded-full animate-eq-1" />
+                      <div className="w-3 bg-blue-400 rounded-full animate-eq-2" />
+                      <div className="w-3 bg-blue-600 rounded-full animate-eq-3" />
+                      <div className="w-3 bg-blue-300 rounded-full animate-eq-4" />
+                      <div className="w-3 bg-blue-500 rounded-full animate-eq-5" />
+                      <div className="w-3 bg-blue-400 rounded-full animate-eq-2" />
+                      <div className="w-3 bg-blue-600 rounded-full animate-eq-3" />
+                    </div>
+                  ) : (
+                    /* Listening State: Microphone in glowing ring */
+                    <div className="w-28 h-28 bg-indigo-600/10 border border-indigo-500/30 rounded-full flex items-center justify-center animate-pulse-glow">
+                      {isMicMuted ? (
+                        <MicOff className="w-12 h-12 text-red-400" />
+                      ) : (
+                        <Mic className="w-12 h-12 text-indigo-400 animate-pulse" />
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Text Description */}
+                <div className="text-center mt-8 space-y-1.5">
+                  <h5 className="text-sm font-sans font-bold text-white tracking-wide">
+                    {isSpeakingState 
+                      ? "El testigo está respondiendo..." 
+                      : isMicMuted
+                      ? "Micrófono silenciado"
+                      : "Escuchando tu pregunta... (Habla ahora)"}
+                  </h5>
+                  <p className="text-[10px] text-gray-400 font-medium">
+                    {isSpeakingState 
+                      ? "Escucha con atención o prepárate para objetar." 
+                      : isMicMuted
+                      ? "Pulsa el micrófono para activar la captura de voz."
+                      : "Di tu contraargumento legal en voz alta."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom Fixed Action bar */}
+              <div className="bg-[#1E293B]/25 border-t border-gray-800/80 p-6 flex items-center justify-center space-x-6 shrink-0">
+                
+                {/* Mute Mic Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsMicMuted(!isMicMuted)}
+                  className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+                    isMicMuted 
+                      ? 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500/20' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
+                  }`}
+                  title={isMicMuted ? "Activar micrófono" : "Silenciar micrófono"}
+                >
+                  {isMicMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                </button>
+
+                {/* Hang Up Button */}
+                <button
+                  type="button"
+                  onClick={handleFinishGame}
+                  className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30 hover:shadow-red-600/50 transition-all cursor-pointer transform hover:scale-105 active:scale-95"
+                  title="Finalizar Interrogatorio"
+                >
+                  <svg className="w-7 h-7 fill-white stroke-none" viewBox="0 0 24 24">
+                    <path d="M12 9c-2.28 0-4.46.34-6.5.97-.55.17-.94.67-.94 1.25V14c0 .55.45 1 1 1 1.05 0 2.07-.16 3.02-.47.45-.14.76-.55.76-1.02v-1.63c2.11-.6 4.39-.6 6.5 0v1.63c0 .47.31.88.76 1.02.95.31 1.97.47 3.02.47.55 0 1-.45 1-1v-2.78c0-.58-.39-1.08-.94-1.25C16.46 9.34 14.28 9 12 9z" />
+                  </svg>
+                </button>
+
+                {/* Return to Text Chat Mode */}
+                <button
+                  type="button"
+                  onClick={() => { unlockTts(); setIsVoiceMode(false); }}
+                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  title="Volver a Modo Texto"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* STANDARD TEXT CHAT MODE VIEW */
+            <div className="lg:col-span-8 flex flex-col justify-between bg-white border border-gray-200/80 rounded-3xl shadow-md overflow-hidden">
             {/* Header of Console */}
             <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -746,7 +1040,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                     onClick={() => {
                       const newTtsVal = !isTtsEnabled;
                       setIsTtsEnabled(newTtsVal);
-                      if (!newTtsVal && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                      if (newTtsVal) {
+                        unlockTts();
+                      } else if (!newTtsVal && typeof window !== 'undefined' && 'speechSynthesis' in window) {
                         window.speechSynthesis.cancel();
                       }
                     }}
@@ -761,6 +1057,19 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                     <span className="hidden sm:inline">Texto a Voz</span>
                   </button>
                 )}
+
+                {isSttSupported && (
+                  <button
+                    type="button"
+                    onClick={() => { unlockTts(); setIsVoiceMode(true); }}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm animate-in fade-in duration-300"
+                    title="Activar Modo Solo Audio / Llamada de Voz"
+                  >
+                    <Mic className="w-3.5 h-3.5 text-white animate-pulse" />
+                    <span className="hidden sm:inline">Llamada de Voz</span>
+                  </button>
+                )}
+
                 <span className="text-xs text-gray-500 font-bold font-mono bg-white border border-gray-100 px-2.5 py-1 rounded-xl">
                   Preguntas Formuladas: {answeredQuestionIds.length}
                 </span>
@@ -914,7 +1223,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                         <button
                           key={q.id}
                           id={`dialog-option-${q.id}`}
-                          onClick={() => handleSelectOption(q)}
+                          onClick={() => { unlockTts(); handleSelectOption(q); }}
                           className="w-full text-left p-3.5 bg-white hover:bg-indigo-50/50 border border-gray-200 hover:border-indigo-200 text-xs text-gray-700 font-semibold rounded-2xl shadow-sm transition-all flex items-start space-x-2.5 leading-relaxed group"
                         >
                           <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
@@ -967,6 +1276,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
               )}
             </div>
           </div>
+          )}
 
           {/* Right Console: Live Scoring Dashboard */}
           <div className="lg:col-span-4 bg-gray-900 text-white border border-gray-800 rounded-3xl p-6 flex flex-col justify-between">

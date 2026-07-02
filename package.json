@@ -8,9 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "elevenlabs": "tsx scripts/elevenlabs-test.ts"
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.56.0",
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
