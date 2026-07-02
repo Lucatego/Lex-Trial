@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, Settings, Plus, Sparkles, CheckCircle } from 'lucide-react';
+import { Search, Bell, Settings, Plus, Sparkles, CheckCircle, Scale } from 'lucide-react';
 import { UserProgress } from '../types';
 
 interface HeaderProps {
@@ -35,13 +35,30 @@ export default function Header({ userProgress, onOpenNewCase, onSearch, onViewCh
 
   return (
     <header className="bg-white border-b border-gray-200/80 px-4 sm:px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-gray-100/40">
-      {/* Title & Greeting */}
-      <div>
-        <h2 id="header-welcome-title" className="font-sans font-bold text-lg sm:text-2xl text-gray-900 tracking-tight flex items-center space-x-2">
-          <span className="truncate max-w-[120px] sm:max-w-none">Hola, {userProgress.name}</span>
-          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 animate-pulse shrink-0" />
-        </h2>
-        <p className="hidden md:block text-xs text-gray-500 font-medium mt-0.5">Controla tu despacho virtual y afina tus destrezas procesales.</p>
+      {/* Title & Greeting / Mobile Logo */}
+      <div className="flex items-center space-x-3">
+        {/* Mobile Logo Button */}
+        <button 
+          onClick={() => onViewChange('despacho')}
+          className="md:hidden flex items-center space-x-2.5 hover:opacity-80 transition-opacity text-left"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+            <Scale className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex flex-col justify-center">
+            <h1 className="font-sans font-bold text-lg tracking-tight text-gray-900 leading-none">LexTrial</h1>
+            <p className="font-mono text-[8px] uppercase tracking-widest text-blue-600 font-semibold mt-0.5">Elite Counsel</p>
+          </div>
+        </button>
+
+        {/* Desktop Greeting */}
+        <div className="hidden md:block">
+          <h2 id="header-welcome-title" className="font-sans font-bold text-lg sm:text-2xl text-gray-900 tracking-tight flex items-center space-x-2">
+            <span className="truncate max-w-[120px] sm:max-w-none">Hola, {userProgress.name}</span>
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 animate-pulse shrink-0" />
+          </h2>
+          <p className="text-xs text-gray-500 font-medium mt-0.5">Controla tu despacho virtual y afina tus destrezas procesales.</p>
+        </div>
       </div>
 
       {/* Action Suite */}
