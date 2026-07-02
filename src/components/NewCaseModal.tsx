@@ -16,6 +16,8 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
   const [summary, setSummary] = useState('');
   const [generating, setGenerating] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [titleError, setTitleError] = useState(false);
+  const [shake, setShake] = useState(false);
 
   // Play the exit animation before actually unmounting the modal
   const handleClose = () => {
@@ -27,6 +29,14 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!title.trim()) {
+      setTitleError(true);
+      setShake(false);
+      requestAnimationFrame(() => setShake(true));
+      return;
+    }
+
     setGenerating(true);
 
     // Simulate elite AI generation with a classy loader
@@ -134,15 +144,29 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
             {/* Title */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500 uppercase">Título de la Causa o Expediente</label>
-              <input 
+              <input
                 id="new-case-title"
-                type="text" 
+                type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (titleError && e.target.value.trim()) setTitleError(false);
+                }}
                 placeholder="Ej. Despido Intempestivo #84 o Tránsito con Lesiones"
-                required
-                className="w-full bg-gray-50 border border-gray-200 focus:bg-white rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                aria-invalid={titleError}
+                aria-describedby={titleError ? 'new-case-title-error' : undefined}
+                onAnimationEnd={() => setShake(false)}
+                className={`w-full bg-gray-50 border rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                  titleError
+                    ? 'border-red-300 focus:bg-white focus:ring-red-400'
+                    : 'border-gray-200 focus:bg-white focus:ring-blue-500'
+                } ${shake ? 'animate-shake' : ''}`}
               />
+              {titleError && (
+                <p id="new-case-title-error" className="text-[11px] text-red-500 font-semibold animate-in fade-in slide-in-from-top-1 duration-150">
+                  Indica un título para la causa antes de generarla.
+                </p>
+              )}
             </div>
 
             {/* Specialty & Difficulty Grid */}

@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Swords, 
-  ArrowLeft, 
-  MessageSquare, 
-  TrendingUp, 
-  ShieldAlert, 
-  HelpCircle, 
-  Scale, 
-  Sparkles, 
-  CheckCircle, 
-  ChevronRight, 
+import {
+  Swords,
+  ArrowLeft,
+  MessageSquare,
+  TrendingUp,
+  ShieldAlert,
+  HelpCircle,
+  Scale,
+  Sparkles,
+  CheckCircle,
+  ChevronRight,
+  ChevronDown,
+  Check,
   Award,
   AlertTriangle,
   Send
@@ -22,9 +24,10 @@ interface ArenaProps {
   activeCaseId: string | null;
   onBackToDashboard: () => void;
   onSimulationComplete: (score: number, status: 'Absolución' | 'Condena' | 'Apelación', efficacy: number, legalTech: number, oratory: number, caseId: string) => void;
+  onSimulationActiveChange?: (active: boolean) => void;
 }
 
-export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimulationComplete }: ArenaProps) {
+export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimulationComplete, onSimulationActiveChange }: ArenaProps) {
   // Select initial case
   const [selectedCase, setSelectedCase] = useState<Case>(
     cases.find(c => c.id === activeCaseId) || cases[0]
@@ -44,6 +47,42 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
   // Custom Typed Input
   const [customInput, setCustomInput] = useState('');
 
+  // Custom case selector dropdown
+  const [caseMenuOpen, setCaseMenuOpen] = useState(false);
+  const [caseMenuClosing, setCaseMenuClosing] = useState(false);
+  const caseTriggerRef = useRef<HTMLButtonElement>(null);
+  const caseMenuRef = useRef<HTMLDivElement>(null);
+
+  const closeCaseMenu = () => {
+    setCaseMenuClosing(true);
+    setTimeout(() => {
+      setCaseMenuOpen(false);
+      setCaseMenuClosing(false);
+    }, 150);
+  };
+
+  // Close the case dropdown on outside click or Escape
+  useEffect(() => {
+    if (!caseMenuOpen) return;
+
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (caseMenuRef.current?.contains(target) || caseTriggerRef.current?.contains(target)) return;
+      closeCaseMenu();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeCaseMenu();
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [caseMenuOpen]);
+
   // Auto-scroll the courtroom transcript to the latest message
   const conversationEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -60,6 +99,12 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     const t = setTimeout(() => setScorePanelMounted(true), 50);
     return () => clearTimeout(t);
   }, [gameStarted]);
+
+  // Let the parent know a simulation is in progress, so it can warn before navigating away
+  useEffect(() => {
+    onSimulationActiveChange?.(gameStarted && !gameOver);
+    return () => onSimulationActiveChange?.(false);
+  }, [gameStarted, gameOver]);
 
   // Handle case selection change
   const handleCaseChange = (c: Case) => {
@@ -269,23 +314,59 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         </div>
 
         {/* Case selector dropdown */}
-        <div className="flex items-center space-x-2.5 bg-white border border-gray-200 rounded-2xl p-2 shadow-sm w-full sm:w-auto mt-2 sm:mt-0">
-          <span className="text-xs font-bold text-gray-400 pl-2 uppercase font-mono">Caso:</span>
-          <select 
-            id="select-arena-case"
-            value={selectedCase.id}
-            onChange={(e) => {
-              const c = cases.find(item => item.id === e.target.value);
-              if (c) handleCaseChange(c);
-            }}
-            className="text-xs font-bold text-gray-800 focus:outline-none bg-transparent cursor-pointer pr-3 w-full sm:w-auto truncate"
+        <div className="relative w-full sm:w-auto mt-2 sm:mt-0">
+          <button
+            ref={caseTriggerRef}
+            id="btn-arena-case-selector"
+            type="button"
+            onClick={() => (caseMenuOpen ? closeCaseMenu() : setCaseMenuOpen(true))}
+            aria-haspopup="listbox"
+            aria-expanded={caseMenuOpen}
+            className="flex items-center space-x-2.5 bg-white border border-gray-200 hover:border-gray-300 rounded-2xl p-2 pr-3.5 shadow-sm w-full sm:w-auto text-left transition-all"
           >
-            {cases.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title} ({c.exp})
-              </option>
-            ))}
-          </select>
+            <span className="text-xs font-bold text-gray-400 pl-2 uppercase font-mono shrink-0">Caso:</span>
+            <span className="text-xs font-bold text-gray-800 truncate max-w-[220px] sm:max-w-[240px]">
+              {selectedCase.title} <span className="text-gray-400 font-medium">({selectedCase.exp})</span>
+            </span>
+            <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${caseMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {caseMenuOpen && (
+            <div
+              ref={caseMenuRef}
+              id="arena-case-menu"
+              role="listbox"
+              aria-label="Selecciona un caso"
+              className={`absolute left-0 right-0 sm:right-0 sm:left-auto top-full mt-2 w-full sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-40 duration-150 ${
+                caseMenuClosing ? 'animate-out fade-out slide-out-to-top-2' : 'animate-in fade-in slide-in-from-top-2'
+              }`}
+            >
+              {cases.map((c) => {
+                const isSelected = c.id === selectedCase.id;
+                return (
+                  <button
+                    key={c.id}
+                    id={`arena-case-option-${c.id}`}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      if (!isSelected) handleCaseChange(c);
+                      closeCaseMenu();
+                    }}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
+                      isSelected ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-600 hover:bg-gray-50 font-semibold'
+                    }`}
+                  >
+                    <span className="truncate">
+                      {c.title} <span className="text-gray-400 font-medium">({c.exp})</span>
+                    </span>
+                    {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bell, Settings, Plus, Sparkles, CheckCircle, Scale } from 'lucide-react';
 import { UserProgress } from '../types';
 
@@ -10,7 +10,11 @@ interface HeaderProps {
 
 export default function Header({ userProgress, onOpenNewCase, onViewChange }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationsClosing, setNotificationsClosing] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(3);
+
+  const bellRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const notifications = [
     { id: 1, text: '¡Excelente trabajo! Tu oratoria penal subió un 5% tras el caso #45.', type: 'progress', time: 'Hace 2 horas' },
@@ -18,12 +22,45 @@ export default function Header({ userProgress, onOpenNewCase, onViewChange }: He
     { id: 3, text: 'Certificado de Absolución emitido para el caso Robo Agravado.', type: 'certificate', time: 'Hace 2 días' },
   ];
 
+  // Play a brief exit animation before actually unmounting the popover
+  const closeNotifications = () => {
+    setNotificationsClosing(true);
+    setTimeout(() => {
+      setShowNotifications(false);
+      setNotificationsClosing(false);
+    }, 150);
+  };
+
   const handleToggleNotifications = () => {
-    setShowNotifications(!showNotifications);
-    if (!showNotifications) {
+    if (showNotifications) {
+      closeNotifications();
+    } else {
+      setShowNotifications(true);
       setUnreadNotifications(0);
     }
   };
+
+  // Close on outside click or Escape, like the modals do
+  useEffect(() => {
+    if (!showNotifications) return;
+
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (popoverRef.current?.contains(target) || bellRef.current?.contains(target)) return;
+      closeNotifications();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeNotifications();
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showNotifications]);
 
   return (
     <header className="bg-white border-b border-gray-200/80 px-4 sm:px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-gray-100/40">
@@ -59,6 +96,7 @@ export default function Header({ userProgress, onOpenNewCase, onViewChange }: He
         <div className="flex items-center space-x-1 sm:space-x-3 relative">
           {/* Notifications Button */}
           <button
+            ref={bellRef}
             id="btn-notifications-toggle"
             onClick={handleToggleNotifications}
             aria-label="Notificaciones"
@@ -74,7 +112,14 @@ export default function Header({ userProgress, onOpenNewCase, onViewChange }: He
 
           {/* Notifications Popover */}
           {showNotifications && (
-            <div id="notifications-popover" className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
+            <div
+              ref={popoverRef}
+              id="notifications-popover"
+              role="menu"
+              className={`absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50 duration-150 ${
+                notificationsClosing ? 'animate-out fade-out slide-out-to-top-2' : 'animate-in fade-in slide-in-from-top-2'
+              }`}
+            >
               <div className="px-4 pb-2 border-b border-gray-100 flex items-center justify-between">
                 <span className="font-sans font-bold text-sm text-gray-800">Notificaciones</span>
                 <span className="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2 py-0.5 rounded-full">Recientes</span>
@@ -91,8 +136,8 @@ export default function Header({ userProgress, onOpenNewCase, onViewChange }: He
                 ))}
               </div>
               <div className="px-4 pt-2 text-center border-t border-gray-100">
-                <button 
-                  onClick={() => setShowNotifications(false)}
+                <button
+                  onClick={closeNotifications}
                   className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
                 >
                   Entendido

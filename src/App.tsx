@@ -9,7 +9,8 @@ import CaseDossierModal from './components/CaseDossierModal';
 import NewCaseModal from './components/NewCaseModal';
 import { casesData } from './data/cases';
 import { Case, RecentCase, UserProgress } from './types';
-import { Sparkles, Linkedin, CheckCircle, X } from 'lucide-react';
+import { Sparkles, Linkedin, CheckCircle, X, AlertTriangle } from 'lucide-react';
+import { useModalA11y } from './hooks/useModalA11y';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('despacho');
@@ -57,6 +58,30 @@ export default function App() {
   const [selectedCaseForDossier, setSelectedCaseForDossier] = useState<Case | null>(null);
   const [showNewCaseModal, setShowNewCaseModal] = useState<boolean>(false);
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
+
+  // Tracks whether there's a simulation in progress in La Arena, to warn before leaving it
+  const [simulationActive, setSimulationActive] = useState(false);
+  const [pendingView, setPendingView] = useState<string | null>(null);
+
+  // Navigation is intercepted while a simulation is active, so the user gets a chance to confirm
+  const requestViewChange = (view: string) => {
+    if (view === currentView) return;
+    if (currentView === 'arena' && simulationActive) {
+      setPendingView(view);
+      return;
+    }
+    setCurrentView(view);
+    setActiveCaseId(null);
+  };
+
+  const confirmLeaveSimulation = () => {
+    const view = pendingView;
+    setPendingView(null);
+    if (view) {
+      setCurrentView(view);
+      setActiveCaseId(null);
+    }
+  };
 
   // Elegant Toast state for success messages
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'linkedin' } | null>(null);
@@ -170,12 +195,9 @@ export default function App() {
     <div id="applet-viewport" className="flex flex-col md:flex-row bg-[#F8FAFC] min-h-screen text-gray-800">
       
       {/* Interactive Left Sidebar */}
-      <Sidebar 
+      <Sidebar
         currentView={currentView}
-        onViewChange={(view) => {
-          setCurrentView(view);
-          setActiveCaseId(null); // Reset preselected case
-        }}
+        onViewChange={requestViewChange}
         onOpenNewCase={() => setShowNewCaseModal(true)}
         userProgress={userProgress}
       />
@@ -184,10 +206,10 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden mb-24 md:mb-0">
         
         {/* Top Header Panel */}
-        <Header 
+        <Header
           userProgress={userProgress}
           onOpenNewCase={() => setShowNewCaseModal(true)}
-          onViewChange={(view) => setCurrentView(view)}
+          onViewChange={requestViewChange}
         />
 
         {/* Scrollable View Area */}
@@ -207,11 +229,12 @@ export default function App() {
           )}
 
           {currentView === 'arena' && (
-            <Arena 
+            <Arena
               cases={cases}
               activeCaseId={activeCaseId}
-              onBackToDashboard={() => setCurrentView('despacho')}
+              onBackToDashboard={() => requestViewChange('despacho')}
               onSimulationComplete={handleSimulationComplete}
+              onSimulationActiveChange={setSimulationActive}
             />
           )}
 
@@ -244,9 +267,17 @@ export default function App() {
 
       {/* New custom case creator modal */}
       {showNewCaseModal && (
-        <NewCaseModal 
+        <NewCaseModal
           onClose={() => setShowNewCaseModal(false)}
           onCaseGenerated={handleCaseGenerated}
+        />
+      )}
+
+      {/* Confirmation before abandoning a simulation in progress */}
+      {pendingView && (
+        <LeaveSimulationModal
+          onCancel={() => setPendingView(null)}
+          onConfirm={confirmLeaveSimulation}
         />
       )}
 
@@ -282,6 +313,62 @@ export default function App() {
         </div>
       )}
 
+    </div>
+  );
+}
+
+interface LeaveSimulationModalProps {
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function LeaveSimulationModal({ onCancel, onConfirm }: LeaveSimulationModalProps) {
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Play the exit animation before actually resolving the user's choice
+  const close = (after: () => void) => {
+    setIsClosing(true);
+    setTimeout(after, 180);
+  };
+
+  const containerRef = useModalA11y<HTMLDivElement>(() => close(onCancel));
+
+  return (
+    <div className={`fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm ${isClosing ? 'animate-out fade-out duration-200' : 'animate-in fade-in duration-200'}`}>
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="leave-sim-modal-title"
+        className={`bg-white rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl ${isClosing ? 'animate-out fade-out zoom-out-95 duration-200' : 'animate-in fade-in zoom-in-95 duration-200'}`}
+      >
+        <div className="flex items-center space-x-2.5 text-amber-600">
+          <AlertTriangle className="w-6 h-6 shrink-0" />
+          <h5 id="leave-sim-modal-title" className="font-sans font-black text-base text-gray-900">¿Salir de la simulación?</h5>
+        </div>
+
+        <p className="text-xs text-gray-500 leading-relaxed font-medium">
+          Tienes un juicio en curso en La Arena. Si sales ahora, perderás el progreso de esta sesión de litigio.
+        </p>
+
+        <div className="flex justify-end space-x-3 pt-2 border-t border-gray-100">
+          <button
+            id="btn-leave-sim-cancel"
+            onClick={() => close(onCancel)}
+            className="px-4 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-100 text-xs font-bold text-gray-700 transition-colors"
+          >
+            Continuar Litigando
+          </button>
+
+          <button
+            id="btn-leave-sim-confirm"
+            onClick={() => close(onConfirm)}
+            className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow"
+          >
+            Salir de todos modos
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

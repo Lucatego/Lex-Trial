@@ -78,7 +78,7 @@ export const casesData: Case[] = [
     type: 'Penal',
     difficulty: 'Principiante',
     skill: 'Interrogatorio Directo',
-    image: 'https://images.unsplash.com/photo-1453728286709-6fa86a664a4d?q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=800',
     summary: 'Defiende a un joven acusado de asalto a mano armada cuya coartada es que se encontraba trabajando en un almacén al otro lado de la ciudad en el momento del incidente.',
     facts: [
       'El robo ocurrió el 5 de enero de 2026 a las 19:45 en una joyería céntrica.',
