@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Scale, Swords, CheckCircle, BrainCircuit } from 'lucide-react';
 import { Case } from '../types';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface NewCaseModalProps {
   onClose: () => void;
@@ -21,6 +22,8 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
     setIsClosing(true);
     setTimeout(onClose, 180);
   };
+
+  const containerRef = useModalA11y<HTMLDivElement>(handleClose);
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,13 +90,20 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
 
   return (
     <div id="new-case-modal" className={`fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm ${isClosing ? 'animate-out fade-out duration-200' : 'animate-in fade-in duration-200'}`}>
-      <div className={`bg-white rounded-3xl max-w-lg w-full overflow-hidden flex flex-col shadow-2xl ${isClosing ? 'animate-out fade-out zoom-out-95 duration-200' : 'animate-in fade-in zoom-in-95 duration-200'}`}>
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-case-modal-title"
+        className={`bg-white rounded-3xl max-w-lg w-full overflow-hidden flex flex-col shadow-2xl ${isClosing ? 'animate-out fade-out zoom-out-95 duration-200' : 'animate-in fade-in zoom-in-95 duration-200'}`}
+      >
 
         {/* Modal Header */}
         <div className="bg-[#0A1128] text-white p-6 relative">
           <button
             id="btn-close-new-case"
             onClick={handleClose}
+            aria-label="Cerrar"
             className="absolute right-4 top-4 p-1.5 hover:bg-white/10 rounded-full transition-all text-white/80 hover:text-white"
           >
             <X className="w-5 h-5" />
@@ -103,7 +113,7 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
             <BrainCircuit className="w-5 h-5 text-indigo-400" />
             <span className="text-xs font-mono font-bold tracking-widest uppercase">Motor IA LexTrial</span>
           </div>
-          <h4 className="font-sans font-black text-lg text-white">Diseñar Nueva Simulación de Causa</h4>
+          <h4 id="new-case-modal-title" className="font-sans font-black text-lg text-white">Diseñar Nueva Simulación de Causa</h4>
           <p className="text-[11px] text-gray-400 mt-1 font-medium">Especifica los parámetros de tu caso legal para que nuestra IA ensamble el dossier procesal de manera inmediata.</p>
         </div>
 

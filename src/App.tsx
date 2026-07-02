@@ -14,7 +14,7 @@ import { Sparkles, Linkedin, CheckCircle, X } from 'lucide-react';
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('despacho');
   const [cases, setCases] = useState<Case[]>(casesData);
-  
+
   // Initialize user progress exactly as pictured in the dashboard image
   const [userProgress, setUserProgress] = useState<UserProgress>({
     name: 'Carlos',

@@ -15,6 +15,7 @@ import {
   Send
 } from 'lucide-react';
 import { Case, SimulationQuestion, RecentCase } from '../types';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface ArenaProps {
   cases: Case[];
@@ -632,68 +633,90 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
 
       {/* OBJECTION SELECTION POPUP MODAL */}
       {showObjectionModal && (
-        <div id="objection-modal" className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center space-x-2.5 text-red-600 border-b border-gray-100 pb-3">
-              <ShieldAlert className="w-6 h-6" />
-              <h5 className="font-sans font-black text-lg">Formular Objeción de Litigio</h5>
-            </div>
-            
-            <p className="text-xs text-gray-500 leading-relaxed font-medium">
-              Sustenta el recurso de objeción de manera técnica. Elige el fundamento idóneo para evitar que la contraparte desvíe la validez de la prueba:
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                id="btn-objection-especulativa"
-                onClick={() => handleTriggerObjection('Especulativa')}
-                className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
-              >
-                <span>Especulativa</span>
-                <span className="text-[9px] text-gray-400 font-medium">Asunciones de opinión</span>
-              </button>
-              
-              <button
-                id="btn-objection-impertinente"
-                onClick={() => handleTriggerObjection('Impertinente')}
-                className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
-              >
-                <span>Impertinente</span>
-                <span className="text-[9px] text-gray-400 font-medium">Fuera de pertinencia</span>
-              </button>
-
-              <button
-                id="btn-objection-argumentativa"
-                onClick={() => handleTriggerObjection('Argumentativa')}
-                className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
-              >
-                <span>Argumentativa</span>
-                <span className="text-[9px] text-gray-400 font-medium">Intenta debatir con testigo</span>
-              </button>
-
-              <button
-                id="btn-objection-inadmisible"
-                onClick={() => handleTriggerObjection('Inadmisible')}
-                className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
-              >
-                <span>Inadmisible</span>
-                <span className="text-[9px] text-gray-400 font-medium">Prueba ilícita u omitida</span>
-              </button>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-gray-100">
-              <button 
-                id="btn-objection-cancel"
-                onClick={() => setShowObjectionModal(false)}
-                className="text-xs font-bold text-gray-500 hover:text-gray-800"
-              >
-                Desestimar Objeción
-              </button>
-            </div>
-          </div>
-        </div>
+        <ObjectionModal
+          onSelect={handleTriggerObjection}
+          onClose={() => setShowObjectionModal(false)}
+        />
       )}
 
+    </div>
+  );
+}
+
+interface ObjectionModalProps {
+  onSelect: (type: string) => void;
+  onClose: () => void;
+}
+
+function ObjectionModal({ onSelect, onClose }: ObjectionModalProps) {
+  const containerRef = useModalA11y<HTMLDivElement>(onClose);
+
+  return (
+    <div id="objection-modal" className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="objection-modal-title"
+        className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200"
+      >
+        <div className="flex items-center space-x-2.5 text-red-600 border-b border-gray-100 pb-3">
+          <ShieldAlert className="w-6 h-6" />
+          <h5 id="objection-modal-title" className="font-sans font-black text-lg">Formular Objeción de Litigio</h5>
+        </div>
+
+        <p className="text-xs text-gray-500 leading-relaxed font-medium">
+          Sustenta el recurso de objeción de manera técnica. Elige el fundamento idóneo para evitar que la contraparte desvíe la validez de la prueba:
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <button
+            id="btn-objection-especulativa"
+            onClick={() => onSelect('Especulativa')}
+            className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
+          >
+            <span>Especulativa</span>
+            <span className="text-[9px] text-gray-400 font-medium">Asunciones de opinión</span>
+          </button>
+
+          <button
+            id="btn-objection-impertinente"
+            onClick={() => onSelect('Impertinente')}
+            className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
+          >
+            <span>Impertinente</span>
+            <span className="text-[9px] text-gray-400 font-medium">Fuera de pertinencia</span>
+          </button>
+
+          <button
+            id="btn-objection-argumentativa"
+            onClick={() => onSelect('Argumentativa')}
+            className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
+          >
+            <span>Argumentativa</span>
+            <span className="text-[9px] text-gray-400 font-medium">Intenta debatir con testigo</span>
+          </button>
+
+          <button
+            id="btn-objection-inadmisible"
+            onClick={() => onSelect('Inadmisible')}
+            className="p-3 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-2xl text-left text-xs font-bold text-gray-700 hover:text-red-700 transition-all flex flex-col space-y-1"
+          >
+            <span>Inadmisible</span>
+            <span className="text-[9px] text-gray-400 font-medium">Prueba ilícita u omitida</span>
+          </button>
+        </div>
+
+        <div className="flex justify-end pt-2 border-t border-gray-100">
+          <button
+            id="btn-objection-cancel"
+            onClick={onClose}
+            className="text-xs font-bold text-gray-500 hover:text-gray-800"
+          >
+            Desestimar Objeción
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -61,6 +61,9 @@ export default function Header({ userProgress, onOpenNewCase, onViewChange }: He
           <button
             id="btn-notifications-toggle"
             onClick={handleToggleNotifications}
+            aria-label="Notificaciones"
+            aria-haspopup="true"
+            aria-expanded={showNotifications}
             className="relative p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-150"
           >
             <Bell className="w-5 h-5" />
@@ -104,6 +107,7 @@ export default function Header({ userProgress, onOpenNewCase, onViewChange }: He
             onClick={() => onViewChange('perfil')}
             className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-150"
             title="Configuración de Perfil"
+            aria-label="Configuración de Perfil"
           >
             <Settings className="w-5 h-5" />
           </button>

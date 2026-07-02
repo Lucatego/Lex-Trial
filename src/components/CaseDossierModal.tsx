@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, BookOpen, FileText, Scale, User, CheckCircle, Swords } from 'lucide-react';
 import { Case } from '../types';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface CaseDossierModalProps {
   caseItem: Case;
@@ -21,9 +22,16 @@ export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: Ca
     }, 180);
   };
 
+  const containerRef = useModalA11y<HTMLDivElement>(() => handleClose());
+
   return (
     <div id="case-dossier-modal" className={`fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm ${isClosing ? 'animate-out fade-out duration-200' : 'animate-in fade-in duration-200'}`}>
-      <div className={`bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl ${isClosing ? 'animate-out fade-out zoom-out-95 duration-200' : 'animate-in fade-in zoom-in-95 duration-200'}`}>
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dossier-modal-title"
+        className={`bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl ${isClosing ? 'animate-out fade-out zoom-out-95 duration-200' : 'animate-in fade-in zoom-in-95 duration-200'}`}>
         
         {/* Modal Header */}
         <div className="bg-gradient-to-br from-[#121E38] via-[#1D2D44] to-[#0A1128] text-white p-6 relative">
@@ -35,6 +43,7 @@ export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: Ca
           <button
             id="btn-close-dossier"
             onClick={() => handleClose()}
+            aria-label="Cerrar expediente"
             className="absolute right-4 top-4 z-10 p-1.5 hover:bg-white/10 rounded-full transition-all text-white/80 hover:text-white"
           >
             <X className="w-5 h-5" />
@@ -44,7 +53,7 @@ export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: Ca
             <span className="text-[10px] font-mono font-bold text-blue-400 tracking-wider uppercase bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
               {caseItem.exp}
             </span>
-            <h4 className="font-sans font-black text-xl text-white leading-tight mt-1">{caseItem.title}</h4>
+            <h4 id="dossier-modal-title" className="font-sans font-black text-xl text-white leading-tight mt-1">{caseItem.title}</h4>
             <p className="text-xs text-gray-300 font-medium max-w-xl">{caseItem.summary}</p>
           </div>
         </div>
