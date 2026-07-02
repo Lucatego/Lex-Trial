@@ -1,12 +1,13 @@
-import { 
-  Zap, 
-  Play, 
-  BookOpen, 
-  Swords, 
-  TrendingUp, 
-  Clock, 
-  Linkedin, 
-  Eye, 
+import { useEffect, useState } from 'react';
+import {
+  Zap,
+  Play,
+  BookOpen,
+  Swords,
+  TrendingUp,
+  Clock,
+  Linkedin,
+  Eye,
   Briefcase,
   ChevronRight,
   Scale,
@@ -36,6 +37,12 @@ export default function Dashboard({
 }: DashboardProps) {
   // We'll suggest the first case for the "Tu Despacho Virtual" main slot (Homicidio Calificado)
   const suggestedCase = cases.find(c => c.id === 'homicidio-calificado') || cases[0];
+
+  // Progress bars start at 0 and animate up to their real value right after mount
+  const [barsMounted, setBarsMounted] = useState(false);
+  useEffect(() => {
+    setBarsMounted(true);
+  }, []);
 
   return (
     <div className="space-y-8 pb-12 select-none animate-in fade-in duration-300">
@@ -211,9 +218,9 @@ export default function Dashboard({
                     strokeWidth="8" 
                     fill="transparent" 
                     strokeDasharray="263.89"
-                    strokeDashoffset={263.89 - (263.89 * userProgress.litigationScore) / 100}
+                    strokeDashoffset={barsMounted ? 263.89 - (263.89 * userProgress.litigationScore) / 100 : 263.89}
                     strokeLinecap="round"
-                    className="transition-all duration-500 ease-out"
+                    className="transition-all duration-700 ease-out"
                   />
                 </svg>
                 {/* Score numbers inside */}
@@ -238,9 +245,9 @@ export default function Dashboard({
                   <span className="font-mono">{userProgress.efficacy}%</span>
                 </div>
                 <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-blue-600 h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${userProgress.efficacy}%` }}
+                  <div
+                    className="bg-blue-600 h-full rounded-full transition-all duration-700 ease-out"
+                    style={{ width: barsMounted ? `${userProgress.efficacy}%` : '0%' }}
                   />
                 </div>
               </div>
@@ -252,9 +259,9 @@ export default function Dashboard({
                   <span className="font-mono">{userProgress.legalTech}%</span>
                 </div>
                 <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-blue-600 h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${userProgress.legalTech}%` }}
+                  <div
+                    className="bg-blue-600 h-full rounded-full transition-all duration-700 ease-out"
+                    style={{ width: barsMounted ? `${userProgress.legalTech}%` : '0%' }}
                   />
                 </div>
               </div>
@@ -266,9 +273,9 @@ export default function Dashboard({
                   <span className="font-mono">{userProgress.oratory}%</span>
                 </div>
                 <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-blue-600 h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${userProgress.oratory}%` }}
+                  <div
+                    className="bg-blue-600 h-full rounded-full transition-all duration-700 ease-out"
+                    style={{ width: barsMounted ? `${userProgress.oratory}%` : '0%' }}
                   />
                 </div>
               </div>

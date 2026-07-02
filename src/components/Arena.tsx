@@ -49,6 +49,17 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     conversationEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [conversationHistory, objectionFeedback, isWitnessTyping]);
 
+  // Score bars start at 0 and grow to their real value right when the sim console mounts
+  const [scorePanelMounted, setScorePanelMounted] = useState(false);
+  useEffect(() => {
+    if (!gameStarted) {
+      setScorePanelMounted(false);
+      return;
+    }
+    const t = setTimeout(() => setScorePanelMounted(true), 50);
+    return () => clearTimeout(t);
+  }, [gameStarted]);
+
   // Handle case selection change
   const handleCaseChange = (c: Case) => {
     setSelectedCase(c);
@@ -564,9 +575,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                     <span className="font-mono text-indigo-400">{currentMetrics.efficacy}%</span>
                   </div>
                   <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-indigo-500 h-full rounded-full transition-all duration-300" 
-                      style={{ width: `${currentMetrics.efficacy}%` }}
+                    <div
+                      className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: scorePanelMounted ? `${currentMetrics.efficacy}%` : '0%' }}
                     />
                   </div>
                 </div>
@@ -578,9 +589,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                     <span className="font-mono text-indigo-400">{currentMetrics.legalTech}%</span>
                   </div>
                   <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-indigo-500 h-full rounded-full transition-all duration-300" 
-                      style={{ width: `${currentMetrics.legalTech}%` }}
+                    <div
+                      className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: scorePanelMounted ? `${currentMetrics.legalTech}%` : '0%' }}
                     />
                   </div>
                 </div>
@@ -592,9 +603,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                     <span className="font-mono text-indigo-400">{currentMetrics.oratory}%</span>
                   </div>
                   <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-indigo-500 h-full rounded-full transition-all duration-300" 
-                      style={{ width: `${currentMetrics.oratory}%` }}
+                    <div
+                      className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: scorePanelMounted ? `${currentMetrics.oratory}%` : '0%' }}
                     />
                   </div>
                 </div>

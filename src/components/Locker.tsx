@@ -29,6 +29,16 @@ export default function Locker({ userProgress, recentCases, onShareCertificate }
   );
   
   const [showCertificateView, setShowCertificateView] = useState(false);
+  const [isCertClosing, setIsCertClosing] = useState(false);
+
+  // Play the exit animation before actually swapping the certificate view away
+  const handleCloseCertificate = () => {
+    setIsCertClosing(true);
+    setTimeout(() => {
+      setShowCertificateView(false);
+      setIsCertClosing(false);
+    }, 180);
+  };
 
   // Parse chart data from user recent scores
   const chartData = userProgress.recentScores.map(rs => ({
@@ -169,7 +179,7 @@ export default function Locker({ userProgress, recentCases, onShareCertificate }
         {/* Right Side: Certificate Viewer Panel */}
         <div className="lg:col-span-4 space-y-6">
           {showCertificateView && selectedCaseForCert ? (
-            <div id="diploma-frame" className="bg-[#0A1128] border border-[#1D2D44] text-white p-6 rounded-3xl shadow-xl space-y-6 animate-in zoom-in-95 duration-200">
+            <div id="diploma-frame" className={`bg-[#0A1128] border border-[#1D2D44] text-white p-6 rounded-3xl shadow-xl space-y-6 ${isCertClosing ? 'animate-out fade-out zoom-out-95 duration-200' : 'animate-in fade-in zoom-in-95 duration-200'}`}>
               <div className="text-center border-b border-white/10 pb-4 space-y-1">
                 <Scale className="w-8 h-8 text-yellow-400 mx-auto" />
                 <h5 className="font-sans font-bold text-sm text-white">Certificación Profesional de Litigio</h5>
@@ -219,7 +229,7 @@ export default function Locker({ userProgress, recentCases, onShareCertificate }
                 
                 <button
                   id="btn-diploma-close"
-                  onClick={() => setShowCertificateView(false)}
+                  onClick={handleCloseCertificate}
                   className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-xs font-semibold transition-colors text-center"
                 >
                   Cerrar Visualizador
