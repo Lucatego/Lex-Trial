@@ -178,7 +178,7 @@ export default function App() {
         />
 
         {/* Scrollable View Area */}
-        <main className="flex-grow px-4 sm:px-8 py-6 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-grow px-4 sm:px-8 py-6 overflow-y-auto w-full">
           
           {/* View Routing Engine */}
           {currentView === 'despacho' && (
