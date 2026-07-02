@@ -197,10 +197,13 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     };
   }, [caseMenuOpen]);
 
-  // Auto-scroll the courtroom transcript to the latest message
+  // Auto-scroll the courtroom transcript to the latest message.
+  // Scrolls only the chat container itself (not scrollIntoView) so it never
+  // drags the whole page's scroll position along with it.
   const conversationEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const container = conversationEndRef.current?.parentElement;
+    container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }, [conversationHistory, objectionFeedback, isWitnessTyping]);
 
   // Score bars start at 0 and grow to their real value right when the sim console mounts
@@ -286,6 +289,10 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
       // Check if all questions are answered or we reached max steps (3)
       if (answeredQuestionIds.length + 1 >= Math.min(selectedCase.simulationScenario.questions.length, 3)) {
         setTimeout(() => {
+          // Blur whatever's focused first, otherwise removing the focused
+          // element (options/input swap for the finish button) yanks the
+          // page's scroll position to the top.
+          (document.activeElement as HTMLElement)?.blur?.();
           setGameOver(true);
         }, 1200);
       } else {
@@ -351,7 +358,10 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
       }));
 
       if (answeredQuestionIds.length >= 2) {
-        setTimeout(() => setGameOver(true), 1200);
+        setTimeout(() => {
+          (document.activeElement as HTMLElement)?.blur?.();
+          setGameOver(true);
+        }, 1200);
       }
     }, 800);
   };
@@ -528,9 +538,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     <div className="space-y-6 pb-12 select-none animate-in fade-in duration-300">
       
       {/* Upper Navigation & Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-        <div className="flex items-center space-x-3">
-          <button 
+      <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8 gap-4 items-center border-b border-gray-100 pb-5">
+        <div className="lg:col-span-8 flex items-center space-x-3">
+          <button
             id="btn-arena-back"
             onClick={() => {
               if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -557,7 +567,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         </div>
 
         {/* Case selector dropdown */}
-        <div className="relative w-full sm:w-auto mt-2 sm:mt-0">
+        <div className="lg:col-span-4 relative w-full">
           <button
             ref={caseTriggerRef}
             id="btn-arena-case-selector"
@@ -565,12 +575,11 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
             onClick={() => (caseMenuOpen ? closeCaseMenu() : setCaseMenuOpen(true))}
             aria-haspopup="listbox"
             aria-expanded={caseMenuOpen}
-            className="flex items-center space-x-2.5 bg-white border border-gray-200 hover:border-gray-300 rounded-2xl p-2 pr-3.5 shadow-sm w-full sm:w-auto text-left transition-all"
+            className="flex items-center space-x-2.5 bg-white border border-gray-200 hover:border-gray-300 rounded-2xl p-2 pr-3.5 shadow-sm w-full text-left transition-all"
           >
             <span className="text-xs font-bold text-gray-400 pl-2 uppercase font-mono shrink-0">Caso:</span>
-            <span className="text-xs font-bold text-gray-800 truncate max-w-[220px] sm:max-w-[240px]">
-              {selectedCase.title} <span className="text-gray-400 font-medium">({selectedCase.exp})</span>
-            </span>
+            <span className="text-xs font-bold text-gray-800 truncate flex-1 min-w-0">{selectedCase.title}</span>
+            <span className="text-[10px] text-gray-400 font-medium font-mono shrink-0 w-24 text-left">{selectedCase.exp}</span>
             <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${caseMenuOpen ? 'rotate-180' : ''}`} />
           </button>
 
@@ -580,7 +589,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
               id="arena-case-menu"
               role="listbox"
               aria-label="Selecciona un caso"
-              className={`absolute left-0 right-0 sm:right-0 sm:left-auto top-full mt-2 w-full sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-40 duration-150 ${
+              className={`absolute left-0 right-0 top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-40 duration-150 ${
                 caseMenuClosing ? 'animate-out fade-out slide-out-to-top-2' : 'animate-in fade-in slide-in-from-top-2'
               }`}
             >
@@ -601,10 +610,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                       isSelected ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-600 hover:bg-gray-50 font-semibold'
                     }`}
                   >
-                    <span className="truncate">
-                      {c.title} <span className="text-gray-400 font-medium">({c.exp})</span>
-                    </span>
-                    {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                    <span className="truncate flex-1 min-w-0">{c.title}</span>
+                    <span className="text-[10px] text-gray-400 font-medium font-mono shrink-0 w-24 text-left">{c.exp}</span>
+                    <Check className={`w-4 h-4 text-indigo-600 shrink-0 ${isSelected ? '' : 'invisible'}`} />
                   </button>
                 );
               })}
@@ -914,7 +922,13 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                         <button
                           key={q.id}
                           id={`dialog-option-${q.id}`}
-                          onClick={() => handleSelectOption(q)}
+                          onClick={(e) => {
+                            // Blur before the option list re-renders and removes this
+                            // button, otherwise the browser yanks scroll to the top
+                            // of the page when the focused element disappears.
+                            e.currentTarget.blur();
+                            handleSelectOption(q);
+                          }}
                           className="w-full text-left p-3.5 bg-white hover:bg-indigo-50/50 border border-gray-200 hover:border-indigo-200 text-xs text-gray-700 font-semibold rounded-2xl shadow-sm transition-all flex items-start space-x-2.5 leading-relaxed group"
                         >
                           <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
