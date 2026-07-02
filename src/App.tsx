@@ -69,13 +69,8 @@ export default function App() {
     }, 4500);
   };
 
-  // Search filter handler
-  const lowerSearchTerm = searchTerm.toLowerCase();
-  const filteredCases = cases.filter(c => 
-    (c.title?.toLowerCase() || '').includes(lowerSearchTerm) ||
-    (c.type?.toLowerCase() || '').includes(lowerSearchTerm) ||
-    (c.skill?.toLowerCase() || '').includes(lowerSearchTerm)
-  );
+  // Search filter handler (disabled for now)
+  const filteredCases = cases;
 
   // Handle case selection from Dashboard cards/quick actions
   const handleSelectCase = (caseId: string, action: 'study' | 'arena') => {

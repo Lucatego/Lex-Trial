@@ -41,9 +41,10 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Navigation Links */}
-        <nav className="flex flex-row md:flex-col items-center justify-around w-full md:w-auto md:space-y-1.5 px-2 py-0 md:p-6 md:pt-0 h-full md:h-auto">
+      {/* Navigation Links */}
+      <nav className="flex flex-row md:flex-col items-center justify-around w-full md:w-auto md:space-y-1.5 px-2 py-0 md:p-6 md:pt-0 h-full md:h-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -65,7 +66,6 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
             );
           })}
         </nav>
-      </div>
 
       {/* Sidebar Footer Section */}
       <div className="hidden md:block p-4 space-y-4">
