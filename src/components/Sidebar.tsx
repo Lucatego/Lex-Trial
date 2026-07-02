@@ -14,9 +14,10 @@ interface SidebarProps {
   onViewChange: (view: string) => void;
   onOpenNewCase: () => void;
   userProgress: UserProgress;
+  isOpen: boolean;
 }
 
-export default function Sidebar({ currentView, onViewChange, onOpenNewCase, userProgress }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, onOpenNewCase, userProgress, isOpen }: SidebarProps) {
   const menuItems = [
     { id: 'despacho', label: 'Despacho Virtual', icon: Briefcase },
     { id: 'arena', label: 'La Arena', icon: Swords },
@@ -25,9 +26,9 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
   ];
 
   return (
-    <aside id="sidebar-container" className="fixed bottom-0 left-0 right-0 h-16 md:h-screen md:sticky md:top-0 md:w-64 bg-[#0A1128] text-gray-300 flex flex-row md:flex-col justify-around md:justify-between border-t md:border-t-0 md:border-r border-[#1D2D44]/30 select-none z-50">
+    <aside id="sidebar-container" className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0A1128] text-gray-300 flex flex-col justify-between h-screen border-r border-[#1D2D44]/30 select-none transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Brand Logo & Header */}
-      <div className="hidden md:block p-6 pb-0">
+      <div className="p-6">
         <div className="flex items-center space-x-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Scale className="w-5 h-5 text-white" />
@@ -43,7 +44,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex flex-row md:flex-col items-center justify-around w-full md:w-auto md:space-y-1.5 px-2 py-0 md:p-6 md:pt-0">
+        <nav className="space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -52,15 +53,14 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
                 key={item.id}
                 id={`sidebar-nav-${item.id}`}
                 onClick={() => onViewChange(item.id)}
-                className={`flex flex-col md:flex-row items-center justify-center md:justify-start space-y-1 md:space-y-0 md:space-x-3 w-16 md:w-full px-1 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-200 font-sans text-sm font-medium ${
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 font-sans text-sm font-medium ${
                   isActive
-                    ? 'bg-white/5 md:bg-transparent md:bg-gradient-to-r md:from-blue-900/40 md:to-indigo-900/20 text-blue-400 md:border-l-4 md:border-blue-500 md:pl-3'
+                    ? 'bg-gradient-to-r from-blue-900/40 to-indigo-900/20 text-blue-400 border-l-4 border-blue-500 pl-3'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
-                <span className="hidden md:inline">{item.label}</span>
-                <span className="md:hidden text-[9px] text-center leading-tight truncate w-full">{item.label.split(' ')[0]}</span>
+                <span>{item.label}</span>
               </button>
             );
           })}
@@ -68,7 +68,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
       </div>
 
       {/* Sidebar Footer Section */}
-      <div className="hidden md:block p-4 space-y-4">
+      <div className="p-4 space-y-4">
         {/* New Simulation Button */}
         <button
           id="btn-sidebar-new-simulation"

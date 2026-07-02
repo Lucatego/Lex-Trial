@@ -13,6 +13,7 @@ import { Sparkles, Linkedin, CheckCircle, X } from 'lucide-react';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('despacho');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [cases, setCases] = useState<Case[]>(casesData);
   const [searchTerm, setSearchTerm] = useState<string>('');
   
@@ -164,19 +165,29 @@ export default function App() {
   return (
     <div id="applet-viewport" className="flex flex-col md:flex-row bg-[#F8FAFC] min-h-screen text-gray-800">
       
+      {/* Overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Interactive Left Sidebar */}
       <Sidebar 
         currentView={currentView}
         onViewChange={(view) => {
           setCurrentView(view);
           setActiveCaseId(null); // Reset preselected case
+          setIsSidebarOpen(false); // Close on mobile navigation
         }}
         onOpenNewCase={() => setShowNewCaseModal(true)}
         userProgress={userProgress}
+        isOpen={isSidebarOpen}
       />
 
       {/* Main View Container */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden mb-16 md:mb-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
         
         {/* Top Header Panel */}
         <Header 
@@ -184,6 +195,7 @@ export default function App() {
           onOpenNewCase={() => setShowNewCaseModal(true)}
           onSearch={(term) => setSearchTerm(term)}
           onViewChange={(view) => setCurrentView(view)}
+          onToggleSidebar={() => setIsSidebarOpen(true)}
         />
 
         {/* Scrollable View Area */}
