@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Swords, 
   ArrowLeft, 
@@ -38,9 +38,16 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
   const [showObjectionModal, setShowObjectionModal] = useState(false);
   const [objectionFeedback, setObjectionFeedback] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [isWitnessTyping, setIsWitnessTyping] = useState(false);
 
   // Custom Typed Input
   const [customInput, setCustomInput] = useState('');
+
+  // Auto-scroll the courtroom transcript to the latest message
+  const conversationEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [conversationHistory, objectionFeedback, isWitnessTyping]);
 
   // Handle case selection change
   const handleCaseChange = (c: Case) => {
@@ -83,11 +90,13 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     setCurrentMetrics(newMetrics);
 
     // 2. Add witness response after a small cinematic delay
+    setIsWitnessTyping(true);
     setTimeout(() => {
+      setIsWitnessTyping(false);
       setConversationHistory(prev => [
         ...prev,
-        { 
-          sender: 'witness', 
+        {
+          sender: 'witness',
           text: q.response,
           feedback: q.feedback
         }
@@ -119,7 +128,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
     ]);
 
     // Simulate an AI response analyzing their custom prompt
+    setIsWitnessTyping(true);
     setTimeout(() => {
+      setIsWitnessTyping(false);
       let aiResponse = '';
       let aiFeedback = '';
       let addedMetrics = { efficacy: 5, legalTech: 5, oratory: 5 };
@@ -378,7 +389,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                 const isSys = msg.sender === 'system';
 
                 return (
-                  <div key={index} className="space-y-1">
+                  <div key={index} className="space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] md:max-w-md rounded-2xl px-4 py-3 text-xs leading-relaxed font-medium ${
                         isUser 
@@ -413,6 +424,17 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                 );
               })}
 
+              {/* Typing indicator: shown while the witness "thinks" before responding */}
+              {isWitnessTyping && (
+                <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="bg-gray-100 rounded-2xl rounded-bl-none border border-gray-200/60 px-4 py-3.5 flex items-center space-x-1.5">
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
+                  </div>
+                </div>
+              )}
+
               {/* Instant objection pop feedback */}
               {objectionFeedback && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 text-xs leading-relaxed font-bold animate-pulse">
@@ -423,6 +445,9 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                   <p>{objectionFeedback}</p>
                 </div>
               )}
+
+              {/* Scroll anchor: keeps the latest message in view */}
+              <div ref={conversationEndRef} />
             </div>
 
             {/* Input / Control Area */}

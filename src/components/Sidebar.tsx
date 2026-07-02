@@ -25,10 +25,14 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
   ];
 
   return (
-    <aside id="sidebar-container" className="fixed bottom-4 left-4 right-4 rounded-2xl md:bottom-auto md:left-auto md:right-auto md:rounded-none h-16 md:h-screen md:sticky md:top-0 md:w-64 bg-[#0A1128] text-gray-300 flex flex-row md:flex-col justify-around md:justify-start border md:border-t-0 md:border-r border-[#1D2D44]/50 md:border-[#1D2D44]/30 select-none z-50 shadow-xl shadow-blue-900/20 md:shadow-none overflow-hidden md:overflow-visible">
+    <aside id="sidebar-container" className="fixed bottom-4 left-4 right-4 rounded-2xl md:bottom-auto md:left-auto md:right-auto md:rounded-none h-16 md:h-screen md:sticky md:top-0 md:w-[17rem] bg-[#0A1128] text-gray-300 flex flex-row md:flex-col justify-around md:justify-start border md:border-t-0 md:border-r border-[#1D2D44]/50 md:border-[#1D2D44]/30 select-none z-50 shadow-xl shadow-blue-900/20 md:shadow-none overflow-hidden md:overflow-visible">
       {/* Brand Logo & Header */}
       <div className="hidden md:block p-6 pb-0">
-        <div className="flex items-center space-x-3 mb-8">
+        <button
+          id="sidebar-logo-home"
+          onClick={() => onViewChange('despacho')}
+          className="flex items-center space-x-3 mb-8 hover:opacity-80 transition-opacity text-left"
+        >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Scale className="w-5 h-5 text-white" />
           </div>
@@ -40,7 +44,7 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
               Elite Counsel
             </p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Navigation Links */}
@@ -60,8 +64,8 @@ export default function Sidebar({ currentView, onViewChange, onOpenNewCase, user
                 }`}
                 title={item.label}
               >
-                <Icon className={`w-6 h-6 md:w-5 md:h-5 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
-                <span className="hidden md:inline">{item.label}</span>
+                <Icon className={`w-6 h-6 md:w-5 md:h-5 shrink-0 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
+                <span className="hidden md:inline-block md:flex-1 md:whitespace-nowrap md:text-left">{item.label}</span>
               </button>
             );
           })}

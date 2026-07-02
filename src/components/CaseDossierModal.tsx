@@ -10,10 +10,20 @@ interface CaseDossierModalProps {
 
 export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: CaseDossierModalProps) {
   const [activeTab, setActiveTab] = useState<'facts' | 'evidence' | 'testimony'>('facts');
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Play the exit animation before actually unmounting the modal
+  const handleClose = (after?: () => void) => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      after?.();
+    }, 180);
+  };
 
   return (
-    <div id="case-dossier-modal" className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+    <div id="case-dossier-modal" className={`fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm ${isClosing ? 'animate-out fade-out duration-200' : 'animate-in fade-in duration-200'}`}>
+      <div className={`bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl ${isClosing ? 'animate-out fade-out zoom-out-95 duration-200' : 'animate-in fade-in zoom-in-95 duration-200'}`}>
         
         {/* Modal Header */}
         <div className="bg-gradient-to-br from-[#121E38] via-[#1D2D44] to-[#0A1128] text-white p-6 relative">
@@ -22,9 +32,9 @@ export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: Ca
             <Scale className="w-24 h-24 text-white" />
           </div>
 
-          <button 
+          <button
             id="btn-close-dossier"
-            onClick={onClose}
+            onClick={() => handleClose()}
             className="absolute right-4 top-4 p-1.5 hover:bg-white/10 rounded-full transition-all text-white/80 hover:text-white"
           >
             <X className="w-5 h-5" />
@@ -142,7 +152,7 @@ export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: Ca
           <div className="flex items-center space-x-3">
             <button
               id="btn-dossier-cancel"
-              onClick={onClose}
+              onClick={() => handleClose()}
               className="px-4 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-100 text-xs font-bold text-gray-700 transition-colors"
             >
               Cerrar Expediente
@@ -150,10 +160,7 @@ export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: Ca
 
             <button
               id="btn-dossier-arena"
-              onClick={() => {
-                onClose();
-                onEnterArena(caseItem.id);
-              }}
+              onClick={() => handleClose(() => onEnterArena(caseItem.id))}
               className="flex items-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow"
             >
               <Swords className="w-4 h-4 text-white" />
