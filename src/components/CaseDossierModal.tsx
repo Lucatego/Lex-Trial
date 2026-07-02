@@ -28,14 +28,14 @@ export default function CaseDossierModal({ caseItem, onClose, onEnterArena }: Ca
         {/* Modal Header */}
         <div className="bg-gradient-to-br from-[#121E38] via-[#1D2D44] to-[#0A1128] text-white p-6 relative">
           {/* Subtle design scale icon */}
-          <div className="absolute right-6 top-6 opacity-10">
+          <div className="absolute right-6 top-6 opacity-10 pointer-events-none">
             <Scale className="w-24 h-24 text-white" />
           </div>
 
           <button
             id="btn-close-dossier"
             onClick={() => handleClose()}
-            className="absolute right-4 top-4 p-1.5 hover:bg-white/10 rounded-full transition-all text-white/80 hover:text-white"
+            className="absolute right-4 top-4 z-10 p-1.5 hover:bg-white/10 rounded-full transition-all text-white/80 hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>

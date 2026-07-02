@@ -12,6 +12,39 @@ button:not(:disabled) {
   cursor: pointer;
 }
 
+/*
+  Feedback táctil consistente por defecto (transición suave + leve
+  achique al presionar). Usa :where() para que tenga especificidad 0:
+  cualquier utilidad de Tailwind puesta en un botón puntual (hover:scale,
+  active:scale, transition-all, etc.) sigue ganando sin conflicto.
+*/
+:where(button:not(:disabled)) {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:where(button:not(:disabled):active) {
+  transform: scale(0.97);
+}
+
+/* Foco de teclado consistente y acorde al diseño, en vez del outline por defecto del navegador */
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Respeta la preferencia de movimiento reducido del sistema operativo */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Custom scrollbars for dashboard comfort */
 ::-webkit-scrollbar {
   width: 6px;

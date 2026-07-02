@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -60,12 +60,25 @@ export default function App() {
 
   // Elegant Toast state for success messages
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'linkedin' } | null>(null);
+  const [toastClosing, setToastClosing] = useState(false);
+  const toastTimers = useRef<{ hide?: ReturnType<typeof setTimeout>; remove?: ReturnType<typeof setTimeout> }>({});
+
+  const dismissToast = () => {
+    clearTimeout(toastTimers.current.hide);
+    clearTimeout(toastTimers.current.remove);
+    setToastClosing(true);
+    toastTimers.current.remove = setTimeout(() => {
+      setToast(null);
+      setToastClosing(false);
+    }, 250);
+  };
 
   const showToast = (message: string, type: 'success' | 'linkedin' = 'success') => {
+    clearTimeout(toastTimers.current.hide);
+    clearTimeout(toastTimers.current.remove);
+    setToastClosing(false);
     setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 4500);
+    toastTimers.current.hide = setTimeout(dismissToast, 4200);
   };
 
   // Handle case selection from Dashboard cards/quick actions
@@ -239,11 +252,13 @@ export default function App() {
 
       {/* Dynamic Floating Toast Notifications */}
       {toast && (
-        <div 
+        <div
           id="toast-notification"
-          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl border flex items-start space-x-3 max-w-sm animate-bounce duration-300 ${
-            toast.type === 'linkedin' 
-              ? 'bg-[#0077B5] border-[#005B8C] text-white' 
+          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl border flex items-start space-x-3 max-w-sm duration-300 ${
+            toastClosing ? 'animate-out fade-out slide-out-to-right-4' : 'animate-in fade-in slide-in-from-right-4'
+          } ${
+            toast.type === 'linkedin'
+              ? 'bg-[#0077B5] border-[#005B8C] text-white'
               : 'bg-emerald-600 border-emerald-700 text-white'
           }`}
         >
@@ -258,8 +273,8 @@ export default function App() {
             </h5>
             <p className="text-[11px] font-medium leading-normal opacity-90 mt-0.5">{toast.message}</p>
           </div>
-          <button 
-            onClick={() => setToast(null)}
+          <button
+            onClick={dismissToast}
             className="text-white/70 hover:text-white shrink-0"
           >
             <X className="w-4 h-4" />
