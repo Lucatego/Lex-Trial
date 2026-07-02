@@ -246,7 +246,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
         </div>
 
         {/* Case selector dropdown */}
-        <div className="flex items-center space-x-2.5 bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
+        <div className="flex items-center space-x-2.5 bg-white border border-gray-200 rounded-2xl p-2 shadow-sm w-full sm:w-auto mt-2 sm:mt-0">
           <span className="text-xs font-bold text-gray-400 pl-2 uppercase font-mono">Caso:</span>
           <select 
             id="select-arena-case"
@@ -255,7 +255,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
               const c = cases.find(item => item.id === e.target.value);
               if (c) handleCaseChange(c);
             }}
-            className="text-xs font-bold text-gray-800 focus:outline-none bg-transparent cursor-pointer pr-3"
+            className="text-xs font-bold text-gray-800 focus:outline-none bg-transparent cursor-pointer pr-3 w-full sm:w-auto truncate"
           >
             {cases.map((c) => (
               <option key={c.id} value={c.id}>
@@ -380,7 +380,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                 return (
                   <div key={index} className="space-y-1">
                     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-md rounded-2xl px-4 py-3 text-xs leading-relaxed font-medium ${
+                      <div className={`max-w-[85%] md:max-w-md rounded-2xl px-4 py-3 text-xs leading-relaxed font-medium ${
                         isUser 
                           ? 'bg-blue-600 text-white rounded-br-none font-semibold'
                           : isWitness

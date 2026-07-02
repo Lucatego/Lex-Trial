@@ -90,7 +90,7 @@ export default function Dashboard({
           <button 
             id="btn-hero-start-sim"
             onClick={() => onSelectCase(suggestedCase.id, 'arena')}
-            className="flex items-center space-x-2.5 bg-[#5B85F9] hover:bg-[#4971E3] text-white py-3.5 px-6 rounded-2xl font-bold text-sm transition-all duration-150 shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98]"
+            className="flex items-center justify-center sm:justify-start space-x-2.5 bg-[#5B85F9] hover:bg-[#4971E3] text-white py-3.5 px-6 rounded-2xl font-bold text-sm transition-all duration-150 shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
           >
             <Play className="w-4 h-4 fill-white" />
             <span>Iniciar Simulación Rápida</span>
@@ -119,7 +119,7 @@ export default function Dashboard({
             </span>
           </div>
 
-          <div id="suggested-case-card" className="bg-white rounded-2xl border border-gray-200/80 shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col justify-between h-[450px]">
+          <div id="suggested-case-card" className="bg-white rounded-2xl border border-gray-200/80 shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col justify-between h-auto lg:h-[450px]">
             {/* Courtroom Image with Dark Overlay and text inside */}
             <div className="relative h-48 w-full bg-gray-900 shrink-0">
               <img 
@@ -189,7 +189,7 @@ export default function Dashboard({
             <h4 className="font-sans font-bold text-lg text-gray-900">Tu Progreso</h4>
           </div>
 
-          <div id="progress-card" className="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-md flex flex-col justify-between h-[450px]">
+          <div id="progress-card" className="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-md flex flex-col justify-between h-auto lg:h-[450px]">
             {/* Circular Gauge */}
             <div className="flex-1 flex flex-col items-center justify-center space-y-4">
               <div className="relative w-36 h-36 flex items-center justify-center">
@@ -283,7 +283,7 @@ export default function Dashboard({
             <h4 className="font-sans font-bold text-lg text-gray-900">Casos Recientes</h4>
           </div>
 
-          <div id="recent-cases-card" className="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-md flex flex-col justify-between h-[450px]">
+          <div id="recent-cases-card" className="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-md flex flex-col justify-between h-auto lg:h-[450px]">
             {/* Recent Cases list */}
             <div className="space-y-4 overflow-y-auto max-h-[340px] pr-1">
               {recentCases.map((rc) => (

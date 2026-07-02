@@ -162,7 +162,7 @@ export default function App() {
   };
 
   return (
-    <div id="applet-viewport" className="flex bg-[#F8FAFC] min-h-screen text-gray-800">
+    <div id="applet-viewport" className="flex flex-col md:flex-row bg-[#F8FAFC] min-h-screen text-gray-800">
       
       {/* Interactive Left Sidebar */}
       <Sidebar 
@@ -176,7 +176,7 @@ export default function App() {
       />
 
       {/* Main View Container */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden mb-16 md:mb-0">
         
         {/* Top Header Panel */}
         <Header 
@@ -187,7 +187,7 @@ export default function App() {
         />
 
         {/* Scrollable View Area */}
-        <main className="flex-grow px-8 py-6 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-grow px-4 sm:px-8 py-6 overflow-y-auto max-w-7xl mx-auto w-full">
           
           {/* View Routing Engine */}
           {currentView === 'despacho' && (

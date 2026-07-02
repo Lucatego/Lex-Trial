@@ -34,20 +34,20 @@ export default function Header({ userProgress, onOpenNewCase, onSearch, onViewCh
   };
 
   return (
-    <header className="bg-white border-b border-gray-200/80 px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-gray-100/40">
+    <header className="bg-white border-b border-gray-200/80 px-4 sm:px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-gray-100/40">
       {/* Title & Greeting */}
       <div>
-        <h2 id="header-welcome-title" className="font-sans font-bold text-2xl text-gray-900 tracking-tight flex items-center space-x-2">
-          <span>Bienvenido, {userProgress.name}</span>
-          <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
+        <h2 id="header-welcome-title" className="font-sans font-bold text-lg sm:text-2xl text-gray-900 tracking-tight flex items-center space-x-2">
+          <span className="truncate max-w-[120px] sm:max-w-none">Hola, {userProgress.name}</span>
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 animate-pulse shrink-0" />
         </h2>
-        <p className="text-xs text-gray-500 font-medium mt-0.5">Controla tu despacho virtual y afina tus destrezas procesales.</p>
+        <p className="hidden md:block text-xs text-gray-500 font-medium mt-0.5">Controla tu despacho virtual y afina tus destrezas procesales.</p>
       </div>
 
       {/* Action Suite */}
-      <div className="flex items-center space-x-6">
+      <div className="flex items-center space-x-3 sm:space-x-6">
         {/* Search Input */}
-        <div className="relative w-80">
+        <div className="relative w-full max-w-[140px] sm:max-w-[200px] md:max-w-xs">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
           <input
             id="search-input-header"
@@ -60,7 +60,7 @@ export default function Header({ userProgress, onOpenNewCase, onSearch, onViewCh
         </div>
 
         {/* Actions Icons & Buttons */}
-        <div className="flex items-center space-x-3 relative">
+        <div className="flex items-center space-x-1 sm:space-x-3 relative">
           {/* Notifications Button */}
           <button
             id="btn-notifications-toggle"
@@ -119,8 +119,8 @@ export default function Header({ userProgress, onOpenNewCase, onSearch, onViewCh
           onClick={onOpenNewCase}
           className="flex items-center space-x-1.5 bg-[#0A1128] hover:bg-[#1D2D44] text-white py-2 px-4 rounded-xl font-semibold text-sm transition-all duration-150 shadow-sm"
         >
-          <Plus className="w-4 h-4" />
-          <span>Nuevo Caso</span>
+          <Plus className="w-4 h-4 shrink-0" />
+          <span className="hidden sm:inline">Nuevo Caso</span>
         </button>
       </div>
     </header>
