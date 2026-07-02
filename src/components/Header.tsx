@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { Search, Bell, Settings, Plus, Sparkles, CheckCircle, Scale } from 'lucide-react';
+import { Bell, Settings, Plus, Sparkles, CheckCircle, Scale } from 'lucide-react';
 import { UserProgress } from '../types';
 
 interface HeaderProps {
   userProgress: UserProgress;
   onOpenNewCase: () => void;
-  onSearch: (term: string) => void;
   onViewChange: (view: string) => void;
 }
 
-export default function Header({ userProgress, onOpenNewCase, onSearch, onViewChange }: HeaderProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+export default function Header({ userProgress, onOpenNewCase, onViewChange }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(3);
 
@@ -19,12 +17,6 @@ export default function Header({ userProgress, onOpenNewCase, onSearch, onViewCh
     { id: 2, text: 'Nuevo expediente penal asignado: Homicidio Calificado (Penal).', type: 'case', time: 'Ayer' },
     { id: 3, text: 'Certificado de Absolución emitido para el caso Robo Agravado.', type: 'certificate', time: 'Hace 2 días' },
   ];
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    onSearch(value);
-  };
 
   const handleToggleNotifications = () => {
     setShowNotifications(!showNotifications);
@@ -63,19 +55,6 @@ export default function Header({ userProgress, onOpenNewCase, onSearch, onViewCh
 
       {/* Action Suite */}
       <div className="flex items-center space-x-3 sm:space-x-6">
-        {/* Search Input */}
-        <div className="relative w-full max-w-[140px] sm:max-w-[200px] md:max-w-xs">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input
-            id="search-input-header"
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Buscar..."
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white text-sm text-gray-700 placeholder-gray-400 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-150"
-          />
-        </div>
-
         {/* Actions Icons & Buttons */}
         <div className="flex items-center space-x-1 sm:space-x-3 relative">
           {/* Notifications Button */}

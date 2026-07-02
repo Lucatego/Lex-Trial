@@ -14,7 +14,6 @@ import { Sparkles, Linkedin, CheckCircle, X } from 'lucide-react';
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('despacho');
   const [cases, setCases] = useState<Case[]>(casesData);
-  const [searchTerm, setSearchTerm] = useState<string>('');
   
   // Initialize user progress exactly as pictured in the dashboard image
   const [userProgress, setUserProgress] = useState<UserProgress>({
@@ -68,9 +67,6 @@ export default function App() {
       setToast(null);
     }, 4500);
   };
-
-  // Search filter handler (disabled for now)
-  const filteredCases = cases;
 
   // Handle case selection from Dashboard cards/quick actions
   const handleSelectCase = (caseId: string, action: 'study' | 'arena') => {
@@ -178,7 +174,6 @@ export default function App() {
         <Header 
           userProgress={userProgress}
           onOpenNewCase={() => setShowNewCaseModal(true)}
-          onSearch={(term) => setSearchTerm(term)}
           onViewChange={(view) => setCurrentView(view)}
         />
 
@@ -188,7 +183,7 @@ export default function App() {
           {/* View Routing Engine */}
           {currentView === 'despacho' && (
             <Dashboard 
-              cases={filteredCases}
+              cases={cases}
               recentCases={recentCases}
               userProgress={userProgress}
               onSelectCase={handleSelectCase}
