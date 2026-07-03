@@ -250,7 +250,7 @@ export default function NewCaseModal({ onClose, onCaseGenerated }: NewCaseModalP
 
           <div className="flex items-center space-x-2 text-indigo-400 mb-1">
             <BrainCircuit className="w-5 h-5 text-indigo-400" />
-            <span className="text-xs font-mono font-bold tracking-widest uppercase">Motor IA LexTrial</span>
+            <span className="text-xs font-mono font-bold tracking-widest uppercase">Motor IA MootJuridix</span>
           </div>
           <h4 id="new-case-modal-title" className="font-sans font-black text-lg text-white">Diseñar Nueva Simulación de Causa</h4>
           <p className="text-[11px] text-gray-400 mt-1 font-medium">Especifica los parámetros de tu caso legal para que nuestra IA ensamble el dossier procesal de manera inmediata.</p>

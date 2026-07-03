@@ -183,7 +183,7 @@ export default function Locker({ userProgress, recentCases, onShareCertificate }
               <div className="text-center border-b border-white/10 pb-4 space-y-1">
                 <Scale className="w-8 h-8 text-yellow-400 mx-auto" />
                 <h5 className="font-sans font-bold text-sm text-white">Certificación Profesional de Litigio</h5>
-                <p className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">LexTrial Elite Counsel</p>
+                <p className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">MootJuridix Elite Counsel</p>
               </div>
 
               {/* Certificate Inner Card representing elegant physical credential */}

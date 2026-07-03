@@ -92,7 +92,7 @@ export default function Sidebar({
           </svg>
           <div>
             <h1 className="font-sans font-bold text-lg tracking-tight text-white flex items-center space-x-1">
-              <span>LexTrial</span>
+              <span>MootJuridix</span>
             </h1>
             <p className="font-mono text-[9px] uppercase tracking-widest text-blue-400 font-semibold">
               Elite Counsel

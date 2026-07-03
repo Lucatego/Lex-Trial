@@ -1,5 +1,5 @@
 {
-  "name": "LexTrial",
+  "name": "MootJuridix",
   "description": "Plataforma interactiva de entrenamiento de litigio y simulación de juicios con inteligencia artificial.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

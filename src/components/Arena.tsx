@@ -892,10 +892,10 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
           {/* Left Console: Dialogue Screen & Options or Audio-Only Mode */}
           {isVoiceMode ? (
             /* AUDIO-ONLY VOICE VUI VIEW */
-            <div className="lg:col-span-8 flex flex-col justify-between bg-[#0F172A] border border-gray-800 rounded-3xl shadow-md overflow-hidden text-white transition-colors duration-500 relative min-h-[500px]">
-              
+            <div className="lg:col-span-8 flex flex-col justify-between bg-[#0A1128] border border-[#1D2D44] rounded-3xl shadow-md overflow-hidden text-white transition-colors duration-500 relative min-h-[500px]">
+
               {/* Header of Audio Console */}
-              <div className="bg-[#1E293B]/45 border-b border-gray-800/80 px-6 py-4 flex items-center justify-between">
+              <div className="bg-[#1D2D44]/45 border-b border-[#1D2D44] px-6 py-4 flex items-center justify-between">
                 {/* Witness Profile and Info */}
                 <div className="flex items-center space-x-3">
                   <div className="relative">
@@ -905,7 +905,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                       className="w-10 h-10 rounded-full object-cover border-2 border-indigo-500/50"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#0F172A] rounded-full" />
+                    <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#0A1128] rounded-full" />
                   </div>
                   <div>
                     <h4 className="font-sans font-bold text-xs text-white">{selectedCase.testimony.witnessName}</h4>
@@ -914,7 +914,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                 </div>
 
                 {/* Call Timer and Red Dot */}
-                <div className="flex items-center space-x-3 bg-black/40 px-3 py-1.5 rounded-full border border-gray-800">
+                <div className="flex items-center space-x-3 bg-black/40 px-3 py-1.5 rounded-full border border-[#1D2D44]">
                   <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse-red" />
                   <span className="text-[10px] text-gray-300 font-bold font-mono tracking-wider">
                     REC {formatTimer(callDuration)}
@@ -935,7 +935,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                     id="toggle-ai-speech"
                     checked={isAiSpeakingSimulated}
                     onChange={(e) => setIsAiSpeakingSimulated(e.target.checked)}
-                    className="w-3.5 h-3.5 text-indigo-650 border-gray-700 rounded focus:ring-indigo-500 cursor-pointer accent-indigo-500"
+                    className="w-3.5 h-3.5 text-indigo-600 border-gray-700 rounded focus:ring-indigo-500 cursor-pointer accent-indigo-500"
                   />
                 </div>
 
@@ -984,7 +984,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
               </div>
 
               {/* Bottom Fixed Action bar */}
-              <div className="bg-[#1E293B]/25 border-t border-gray-800/80 p-6 flex items-center justify-center space-x-6 shrink-0">
+              <div className="bg-[#1D2D44]/25 border-t border-[#1D2D44] p-6 flex items-center justify-center space-x-6 shrink-0">
                 
                 {/* Mute Mic Button */}
                 <button
@@ -1062,7 +1062,7 @@ export default function Arena({ cases, activeCaseId, onBackToDashboard, onSimula
                   <button
                     type="button"
                     onClick={() => { unlockTts(); setIsVoiceMode(true); }}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm animate-in fade-in duration-300"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm animate-in fade-in duration-300"
                     title="Activar Modo Solo Audio / Llamada de Voz"
                   >
                     <Mic className="w-3.5 h-3.5 text-white animate-pulse" />

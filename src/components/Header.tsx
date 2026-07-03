@@ -72,58 +72,58 @@ export default function Header({ userProgress, onOpenNewCase, onViewChange }: He
           className="md:hidden flex items-center space-x-2.5 hover:opacity-80 transition-opacity text-left"
         >
           <svg viewBox="0 0 100 100" className="w-10 h-10 shrink-0" xmlns="http://www.w3.org/2000/svg">
-            <polygon 
-              points="50,6 88,28 88,72 50,94 12,72 12,28" 
-              stroke="#0F172A" 
-              strokeWidth="7" 
-              fill="none" 
-              strokeLinejoin="round" 
+            <polygon
+              points="50,6 88,28 88,72 50,94 12,72 12,28"
+              stroke="#0A1128"
+              strokeWidth="7"
+              fill="none"
+              strokeLinejoin="round"
             />
-            <line 
-              x1="50" 
-              y1="22" 
-              x2="50" 
-              y2="34" 
-              stroke="#0F172A" 
-              strokeWidth="4.5" 
-              strokeLinecap="round" 
+            <line
+              x1="50"
+              y1="22"
+              x2="50"
+              y2="34"
+              stroke="#0A1128"
+              strokeWidth="4.5"
+              strokeLinecap="round"
             />
-            <line 
-              x1="50" 
-              y1="66" 
-              x2="50" 
-              y2="78" 
-              stroke="#0F172A" 
-              strokeWidth="4.5" 
-              strokeLinecap="round" 
+            <line
+              x1="50"
+              y1="66"
+              x2="50"
+              y2="78"
+              stroke="#0A1128"
+              strokeWidth="4.5"
+              strokeLinecap="round"
             />
-            <line 
-              x1="22" 
-              y1="43" 
-              x2="78" 
-              y2="43" 
-              stroke="#2563EB" 
-              strokeWidth="5.5" 
-              strokeLinecap="round" 
+            <line
+              x1="22"
+              y1="43"
+              x2="78"
+              y2="43"
+              stroke="#3B82F6"
+              strokeWidth="5.5"
+              strokeLinecap="round"
             />
-            <line 
-              x1="22" 
-              y1="57" 
-              x2="78" 
-              y2="57" 
-              stroke="#2563EB" 
-              strokeWidth="5.5" 
-              strokeLinecap="round" 
+            <line
+              x1="22"
+              y1="57"
+              x2="78"
+              y2="57"
+              stroke="#3B82F6"
+              strokeWidth="5.5"
+              strokeLinecap="round"
             />
-            <circle 
-              cx="50" 
-              cy="50" 
-              r="14" 
-              fill="#0F172A" 
+            <circle
+              cx="50"
+              cy="50"
+              r="14"
+              fill="#0A1128"
             />
           </svg>
           <div className="flex flex-col justify-center">
-            <h1 className="font-sans font-bold text-lg tracking-tight text-gray-900 leading-none">LexTrial</h1>
+            <h1 className="font-sans font-bold text-lg tracking-tight text-gray-900 leading-none">MootJuridix</h1>
             <p className="font-mono text-[8px] uppercase tracking-widest text-blue-600 font-semibold mt-0.5">Elite Counsel</p>
           </div>
         </button>
